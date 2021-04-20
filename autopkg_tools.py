@@ -208,10 +208,13 @@ def handle_recipe(recipe, opts):
     if recipe.verified in (True, None):
         recipe.run()
         if recipe.results["imported"]:
+            print("Imported")
             checkout(recipe.branch)
             for imported in recipe.results["imported"]:
+                print("Adding files")
                 git_run(["add", f"'pkgs/{ imported['pkg_repo_path'] }'"])
                 git_run(["add", f"'pkgsinfo/{ imported['pkginfo_path'] }'"])
+            print("Committing changes")
             git_run(
                 [
                     "commit",
@@ -219,6 +222,7 @@ def handle_recipe(recipe, opts):
                     f"'Updated { recipe.name } to { recipe.updated_version }'",
                 ]
             )
+            print("Pushing changes")
             git_run(["push", "--set-upstream", "origin", recipe.branch])
     return recipe
 
