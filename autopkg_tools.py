@@ -265,8 +265,7 @@ def slack_alert(recipe, opts):
     if opts.debug:
         print("Debug: skipping Slack notification - debug is enabled!")
         return
-    print(SLACK_WEBHOOK)
-    if SLACK_WEBHOOK is None:
+    if not SLACK_WEBHOOK:
         print("Skipping slack notification - webhook is missing!")
         return
 
