@@ -24,8 +24,6 @@ import subprocess
 from pathlib import Path
 from optparse import OptionParser
 from datetime import datetime
-import boto3
-from botocore.exceptions import ClientError
 
 
 DEBUG = False
@@ -33,13 +31,6 @@ SLACK_WEBHOOK = os.environ.get("SLACK_WEBHOOK_TOKEN", None)
 MUNKI_REPO = os.path.join(os.getenv("GITHUB_WORKSPACE", "/tmp/"), "munki_repo")
 OVERRIDES_DIR = os.path.relpath("overrides/")
 RECIPE_TO_RUN = os.environ.get("RECIPE", None)
-AWS_S3_BUCKET = os.environ.get("AWS_S3_BUCKET", None)
-s3_client = boto3.client(
-    "s3",
-    aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-    aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
-)
-
 
 class Recipe(object):
     def __init__(self, path):
@@ -63,7 +54,7 @@ class Recipe(object):
     @property
     def branch(self):
         return (
-            "autopkg-{}_{}".format(self.name, self.updated_version)
+            "{}_{}".format(self.name, self.updated_version)
             .strip()
             .replace(" ", "")
             .replace(")", "-")
@@ -169,31 +160,6 @@ class Recipe(object):
         return self.results
 
 
-### S3 FUNCTIONS
-def upload_file(file_name, bucket, object_name=None):
-    """Upload a file to an S3 bucket
-
-    :param file_name: File to upload
-    :param bucket: Bucket to upload to
-    :param object_name: S3 object name. If not specified then file_name is used
-    :return: True if file was uploaded, else False
-    credit: https://boto3.amazonaws.com/v1/documentation/api/latest/guide/s3-uploading-files.html
-    """
-
-    # If S3 object_name was not specified, use file_name
-    if object_name is None:
-        object_name = file_name
-
-    # Upload the file
-    s3_client = boto3.client("s3")
-    try:
-        response = s3_client.upload_file(file_name, bucket, object_name)
-    except ClientError as e:
-        print(e.stderr)
-        return False
-    return True
-
-
 ### GIT FUNCTIONS
 def git_run(cmd):
     cmd = ["git"] + cmd
@@ -204,9 +170,7 @@ def git_run(cmd):
         hide_cmd_output = False
 
     try:
-        result = subprocess.run(
-            " ".join(cmd), shell=True, cwd=MUNKI_REPO, capture_output=hide_cmd_output
-        )
+        result = subprocess.run(" ".join(cmd), shell=True, cwd=MUNKI_REPO, capture_output=hide_cmd_output)
     except subprocess.CalledProcessError as e:
         print(e.stderr)
         raise e
@@ -217,8 +181,8 @@ def current_branch():
 
 
 def checkout(branch, new=True):
-    if current_branch() != "main" and branch != "main":
-        checkout("main", new=False)
+    if current_branch() != "master" and branch != "master":
+        checkout("master", new=False)
 
     gitcmd = ["checkout"]
     if new:
@@ -248,9 +212,6 @@ def handle_recipe(recipe, opts):
             for imported in recipe.results["imported"]:
                 git_run(["add", f"'pkgs/{ imported['pkg_repo_path'] }'"])
                 git_run(["add", f"'pkgsinfo/{ imported['pkginfo_path'] }'"])
-                PKG_PATH = os.path.join(MUNKI_REPO, "pkgs", imported["pkg_repo_path"])
-                DEST_PKG_PATH = os.path.join("pkgs", imported["pkg_repo_path"])
-                upload_file(PKG_PATH, AWS_S3_BUCKET, DEST_PKG_PATH)
             git_run(
                 [
                     "commit",
@@ -355,8 +316,9 @@ def slack_alert(recipe, opts):
         headers={"Content-Type": "application/json"},
     )
     if response.status_code != 200:
-        print(
-            f"WARNING: Request to slack returned an error {response.status_code}, the response is:\n{response.text}"
+        raise ValueError(
+            "Request to slack returned an error %s, the response is:\n%s"
+            % (response.status_code, response.text)
         )
 
 
@@ -413,7 +375,7 @@ def main():
             title = " ".join([f"{recipe.name}" for recipe in failures])
             lines = [f"{recipe.results['message']}\n" for recipe in failures]
             with open("pull_request_title", "a+") as title_file:
-                title_file.write(f"fix: Update trust for {title}")
+                title_file.write(f"Update trust for {title}")
             with open("pull_request_body", "a+") as body_file:
                 body_file.writelines(lines)
 
