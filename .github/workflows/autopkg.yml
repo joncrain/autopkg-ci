@@ -21,11 +21,6 @@ jobs:
       with:
         fetch-depth: 1
 
-    - name: Install python dependencies
-      run: |
-        python3 -m pip install --upgrade pip
-        pip3 install -r requirements.txt
-
     - name: Install Munki
       run: |
         curl -L https://github.com/munki/munki/releases/download/v5.2.3/munkitools-5.2.3.4295.pkg --output /tmp/munkitools.pkg
