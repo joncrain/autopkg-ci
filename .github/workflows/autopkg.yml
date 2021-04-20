@@ -39,7 +39,7 @@ jobs:
     - name: Checkout your Munki LFS repo
       uses: actions/checkout@28c7f3d2b5162b5ddd3dfd9a45aa55eaf396478b
       with:
-        repository: replace_with_your_munki_repo
+        repository: joncrain/munki_repo_ci
         token: ${{ secrets.GITHUB_TOKEN }}
         fetch-depth: 1
         ref: refs/heads/master
