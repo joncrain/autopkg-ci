@@ -170,7 +170,8 @@ def git_run(cmd):
         hide_cmd_output = False
 
     try:
-        result = subprocess.run(" ".join(cmd), shell=True, cwd=MUNKI_REPO, capture_output=hide_cmd_output)
+        result = subprocess.run(" ".join(cmd), shell=True, cwd=MUNKI_REPO)
+        print(result)
     except subprocess.CalledProcessError as e:
         print(e.stderr)
         raise e
