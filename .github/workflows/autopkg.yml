@@ -1,4 +1,4 @@
-name: Autopkg run
+name: AutoPkg run
 
 on:
   watch:
@@ -34,7 +34,7 @@ jobs:
     - name: Checkout your Munki LFS repo
       uses: actions/checkout@28c7f3d2b5162b5ddd3dfd9a45aa55eaf396478b
       with:
-        repository: joncrain/munki_repo_ci
+        repository: joncrain/munki_repo
         token: ${{ secrets.MUNKI_GITHUB_TOKEN }}
         fetch-depth: 1
         ref: refs/heads/main
