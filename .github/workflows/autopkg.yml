@@ -35,7 +35,7 @@ jobs:
       uses: actions/checkout@28c7f3d2b5162b5ddd3dfd9a45aa55eaf396478b
       with:
         repository: joncrain/munki_repo
-        token: ${{ secrets.MUNKI_GITHUB_TOKEN }}
+        token: ${{ secrets.GITHUB_TOKEN }}
         fetch-depth: 1
         ref: refs/heads/main
         path: munki_repo
@@ -46,7 +46,7 @@ jobs:
         defaults write com.github.autopkg RECIPE_REPO_DIR "$(pwd)"/repos/
         defaults write com.github.autopkg FAIL_RECIPES_WITHOUT_TRUST_INFO -bool YES
         defaults write com.github.autopkg MUNKI_REPO "$GITHUB_WORKSPACE"/munki_repo
-        defaults write com.github.autopkg GITHUB_TOKEN "${{ secrets.MUNKI_GITHUB_TOKEN }}"
+        defaults write com.github.autopkg GITHUB_TOKEN "${{ secrets.GITHUB_TOKEN }}"
         git config --global user.name "runner"
         git config --global user.email "runner@githubactions.local"
 
