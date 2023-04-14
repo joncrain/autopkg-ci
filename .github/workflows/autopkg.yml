@@ -11,57 +11,53 @@ jobs:
   AutoPkg:
     runs-on: macos-latest
     timeout-minutes: 10 # Keeps your builds from running too long
-    env:
-      MUNKI_VERSION: "6.2.1"
-      MUNKI_EXPLICIT_VERSION: "6.2.1.4545"
-      AUTOPKG_VERSION: "2.7.2"
     steps:
     - name: Checkout AutoPkg recipes (this repo)
       uses: actions/checkout@v3
 
-    - name: Cache Munki
-      uses: john-shaffer/cache@d4e5f5ecb5773a5c1ce60d764950bbd161baa303
-      id: munki-code-cache
-      with:
-        path: /usr/local/munki
-        key: ${{ runner.os }}-munki-code-${{ env.MUNKI_EXPLICIT_VERSION }}
+#     - name: Cache Munki
+#       uses: john-shaffer/cache@d4e5f5ecb5773a5c1ce60d764950bbd161baa303
+#       id: munki-code-cache
+#       with:
+#         path: /usr/local/munki
+#         key: ${{ runner.os }}-munki-code-${{ env.MUNKI_EXPLICIT_VERSION }}
 
-    - name: Cache Autopkg Code
-      uses: john-shaffer/cache@d4e5f5ecb5773a5c1ce60d764950bbd161baa303
-      id: autopkg-code-cache
-      with:
-        path: /Library/AutoPkg
-        key: ${{ runner.os }}-autopkg-code-${{ env.AUTOPKG_VERSION }}
+#     - name: Cache Autopkg Code
+#       uses: john-shaffer/cache@d4e5f5ecb5773a5c1ce60d764950bbd161baa303
+#       id: autopkg-code-cache
+#       with:
+#         path: /Library/AutoPkg
+#         key: ${{ runner.os }}-autopkg-code-${{ env.AUTOPKG_VERSION }}
 
     - name: Cache Autopkg Repo
       uses: actions/cache@v3
       id: autopkg-repo-cache
       with:
-        path: ~/Library/AutoPkg
+        path: /Users/runner/Library/AutoPkg
         key: ${{ runner.os }}-autopkg-repo-${{ hashFiles('repo_list.txt')}}
 
     - name: Cache Autopkg Settings
       uses: actions/cache@v3
       id: autopkg-settings-cache
       with:
-        path: ~/Library/Preferences/com.github.autopkg.plist
-        key: ${{ runner.os }}-autopkg-settings-${{ hashFiles('~/Library/Preferences/com.github.autopkg.plist')}}
+        path: /Users/runner/Library/Preferences/com.github.autopkg.plist
+        key: ${{ runner.os }}-autopkg-settings-${{ hashFiles('/Users/runner/Library/Preferences/com.github.autopkg.plist')}}
 
-    - name: Fix Autopkg
-      if: steps.autopkg-code-cache.outputs.cache-hit == 'true'
-      run: |
-        /bin/ln -s /Library/AutoPkg/autopkg /usr/local/bin/autopkg
-        sudo /bin/mkdir -p /usr/local/autopkg
-        sudo /bin/ln -s /Library/AutoPkg/Python3/Python.framework/Versions/Current/bin/python3 /usr/local/autopkg/python
+#     - name: Fix Autopkg
+#       if: steps.autopkg-code-cache.outputs.cache-hit == 'true'
+#       run: |
+#         /bin/ln -s /Library/AutoPkg/autopkg /usr/local/bin/autopkg
+#         sudo /bin/mkdir -p /usr/local/autopkg
+#         sudo /bin/ln -s /Library/AutoPkg/Python3/Python.framework/Versions/Current/bin/python3 /usr/local/autopkg/python
 
     - name: Install Munki # needed for some processors
-      if: steps.munki-code-cache.outputs.cache-hit != 'true'
+#       if: steps.munki-code-cache.outputs.cache-hit != 'true'
       run: |
         curl -L https://github.com/munki/munki/releases/download/v${{ env.MUNKI_VERSION }}/munkitools-${{ env.MUNKI_EXPLICIT_VERSION }}.pkg --output /tmp/munkitools.pkg
         sudo installer -pkg /tmp/munkitools.pkg -target /
 
     - name: Install AutoPkg
-      if: steps.autopkg-code-cache.outputs.cache-hit != 'true'
+#       if: steps.autopkg-code-cache.outputs.cache-hit != 'true'
       run: |
         curl -L https://github.com/autopkg/autopkg/releases/download/v${{ env.AUTOPKG_VERSION }}/autopkg-${{ env.AUTOPKG_VERSION }}.pkg --output /tmp/autopkg.pkg
         sudo installer -pkg /tmp/autopkg.pkg -target /
