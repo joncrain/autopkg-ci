@@ -86,7 +86,6 @@ jobs:
         git config --global user.email "runner@githubactions.local"
 
     - name: Add AutoPkg repos
-      if: steps.autopkg-repo-cache.outputs.cache-hit != 'true'
       run: |
         for repo in $(cat repo_list.txt); do autopkg repo-add "$repo"; done
         autopkg repo-update all
