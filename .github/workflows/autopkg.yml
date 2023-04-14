@@ -20,26 +20,18 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Cache Munki
-      uses: actions/cache@v3
+      uses: john-shaffer/cache@d4e5f5ecb5773a5c1ce60d764950bbd161baa303
       id: munki-code-cache
       with:
-        path: ~/usr/local/munki
+        path: /usr/local/munki
         key: ${{ runner.os }}-munki-code-${{ env.MUNKI_EXPLICIT_VERSION }}
 
-    - name: Move Munki cache
-      if: steps.munki-code-cache.outputs.cache-hit == 'true'
-      run: sudo mv ~/usr/local/munki /usr/local/munki
-
     - name: Cache Autopkg
-      uses: actions/cache@v3
+      uses: john-shaffer/cache@d4e5f5ecb5773a5c1ce60d764950bbd161baa303
       id: autopkg-code-cache
       with:
-        path: ~/Library/AutoPkg
+        path: /Library/AutoPkg
         key: ${{ runner.os }}-autopkg-code-${{ env.AUTOPKG_VERSION }}
-
-    - name: Move Autopkg cache
-      if: steps.autopkg-code-cache.outputs.cache-hit == 'true'
-      run: sudo mv ~/Library/AutoPkg /Library/AutoPkg
         
     # - name: Cache Autopkg Repos
     #   uses: actions/cache@v3
@@ -55,6 +47,7 @@ jobs:
         sudo installer -pkg /tmp/munkitools.pkg -target /
 
     - name: Install AutoPkg
+      if: steps.autopkg-code-cache.outputs.cache-hit != 'true'
       run: |
         curl -L https://github.com/autopkg/autopkg/releases/download/v${{ env.AUTOPKG_VERSION }}/autopkg-${{ env.AUTOPKG_VERSION }}.pkg --output /tmp/autopkg.pkg
         sudo installer -pkg /tmp/autopkg.pkg -target /
