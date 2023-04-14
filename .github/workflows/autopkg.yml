@@ -42,7 +42,9 @@ jobs:
 
     - name: Fix Autopkg
       if: steps.autopkg-code-cache.outputs.cache-hit == 'true'
-      run: ln -s /Library/AutoPkg/autopkg /usr/local/bin/autopkg
+      run: |
+        /bin/ln -s /Library/AutoPkg/autopkg /usr/local/bin/autopkg
+        /bin/ln -s /Library/AutoPkg/Python3/Python.framework/Versions/Current/bin/python3 /usr/local/autopkg/python
 
     # - name: Cache Autopkg Repos
     #   uses: actions/cache@v3
