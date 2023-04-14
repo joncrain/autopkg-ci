@@ -27,7 +27,7 @@ jobs:
         key: ${{ runner.os }}-munki-code-${{ env.MUNKI_EXPLICIT_VERSION }}
 
     - name: Move Munki cache
-      if: steps.munki-code-cache.outputs.cache-hit = 'true'
+      if: steps.munki-code-cache.outputs.cache-hit == 'true'
       run: sudo mv ~/usr/local/munki /usr/local/munki
 
     - name: Cache Autopkg
@@ -38,7 +38,7 @@ jobs:
         key: ${{ runner.os }}-autopkg-code-${{ env.AUTOPKG_VERSION }}
 
     - name: Move Autopkg cache
-      if: steps.autopkg-code-cache.outputs.cache-hit = 'true'
+      if: steps.autopkg-code-cache.outputs.cache-hit == 'true'
       run: sudo mv ~/Library/AutoPkg /Library/AutoPkg
         
     # - name: Cache Autopkg Repos
