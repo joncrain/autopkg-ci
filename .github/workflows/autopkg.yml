@@ -38,7 +38,7 @@ jobs:
       id: autopkg-repo-cache
       with:
         path: ~/Library/AutoPkg
-        key: ${{ runner.os }}-autopkg-repo-${{ env.AUTOPKG_VERSION }}
+        key: ${{ runner.os }}-autopkg-repo-${{ hashFiles('repo_list.txt')}}
 
     - name: Fix Autopkg
       if: steps.autopkg-code-cache.outputs.cache-hit == 'true'
@@ -86,12 +86,16 @@ jobs:
         git config --global user.email "runner@githubactions.local"
 
     - name: Add AutoPkg repos
+      if: steps.autopkg-repo-cache.outputs.cache-hit != 'true'
       run: |
         for repo in $(cat repo_list.txt); do autopkg repo-add "$repo" && autopkg repo-update "$repo"; done
 
+    - name: AutoPkg repo update
+      if: steps.autopkg-repo-cache.outputs.cache-hit == 'true'
+      run: autopkg repo-update all
+
     - name: Run makecatalogs
-      run: |
-        /usr/local/munki/makecatalogs munki_repo
+      run: /usr/local/munki/makecatalogs munki_repo
 
     - name: Run AutoPkg
       run: |
