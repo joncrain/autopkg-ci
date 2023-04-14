@@ -26,21 +26,21 @@ jobs:
         path: /usr/local/munki
         key: ${{ runner.os }}-munki-code-${{ env.MUNKI_EXPLICIT_VERSION }}
 
-    - name: Cache Autopkg
+    - name: Cache Autopkg Code
       uses: john-shaffer/cache@d4e5f5ecb5773a5c1ce60d764950bbd161baa303
       id: autopkg-code-cache
       with:
         path: /Library/AutoPkg
         key: ${{ runner.os }}-autopkg-code-${{ env.AUTOPKG_VERSION }}
 
-    - name: Cache Autopkg
+    - name: Cache Autopkg Repo
       uses: actions/cache@v3
       id: autopkg-repo-cache
       with:
         path: ~/Library/AutoPkg
         key: ${{ runner.os }}-autopkg-repo-${{ hashFiles('repo_list.txt')}}
 
-    - name: Cache Autopkg
+    - name: Cache Autopkg Settings
       uses: actions/cache@v3
       id: autopkg-settings-cache
       with:
