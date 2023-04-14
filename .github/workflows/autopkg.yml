@@ -40,19 +40,19 @@ jobs:
         path: ~/Library/AutoPkg
         key: ${{ runner.os }}-autopkg-repo-${{ hashFiles('repo_list.txt')}}
 
+    - name: Cache Autopkg
+      uses: actions/cache@v3
+      id: autopkg-settings-cache
+      with:
+        path: ~/Library/Preferences/com.github.autopkg.plist
+        key: ${{ runner.os }}-autopkg-settings-${{ hashFiles('~/Library/Preferences/com.github.autopkg.plist')}}
+
     - name: Fix Autopkg
       if: steps.autopkg-code-cache.outputs.cache-hit == 'true'
       run: |
         /bin/ln -s /Library/AutoPkg/autopkg /usr/local/bin/autopkg
         sudo /bin/mkdir -p /usr/local/autopkg
         sudo /bin/ln -s /Library/AutoPkg/Python3/Python.framework/Versions/Current/bin/python3 /usr/local/autopkg/python
-
-    # - name: Cache Autopkg Repos
-    #   uses: actions/cache@v3
-    #   id: autopkg-repo-cache
-    #   with:
-    #     path: ~/Library/AutoPkg
-    #     key: ${{ runner.os }}-autopkg-code-${{ env.AUTOPKG_VERSION }}
 
     - name: Install Munki # needed for some processors
       if: steps.munki-code-cache.outputs.cache-hit != 'true'
@@ -75,20 +75,23 @@ jobs:
         ref: refs/heads/main
         path: munki_repo
 
-    - name: Configure AutoPkg and Git
+    - name: Configure AutoPkg
+      if: steps.munki-settings-cache.outputs.cache-hit != 'true'
       run: |
         defaults write com.github.autopkg RECIPE_OVERRIDE_DIRS "$(pwd)"/overrides/
         defaults write com.github.autopkg RECIPE_REPO_DIR "$(pwd)"/repos/
         defaults write com.github.autopkg FAIL_RECIPES_WITHOUT_TRUST_INFO -bool YES
         defaults write com.github.autopkg MUNKI_REPO "$GITHUB_WORKSPACE"/munki_repo
         defaults write com.github.autopkg GITHUB_TOKEN "${{ secrets.MUNKI_GITHUB_TOKEN }}"
+        for repo in $(cat repo_list.txt); do autopkg repo-add "$repo"; done
+
+    - name: Configure Git
+      run: |
         git config --global user.name "runner"
         git config --global user.email "runner@githubactions.local"
 
-    - name: Add AutoPkg repos
-      run: |
-        for repo in $(cat repo_list.txt); do autopkg repo-add "$repo"; done
-        autopkg repo-update all
+    - name: Update AutoPkg repos
+      run: autopkg repo-update all
 
     - name: Run makecatalogs
       run: /usr/local/munki/makecatalogs munki_repo
