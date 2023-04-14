@@ -88,11 +88,8 @@ jobs:
     - name: Add AutoPkg repos
       if: steps.autopkg-repo-cache.outputs.cache-hit != 'true'
       run: |
-        for repo in $(cat repo_list.txt); do autopkg repo-add "$repo" && autopkg repo-update "$repo"; done
-
-    - name: AutoPkg repo update
-      if: steps.autopkg-repo-cache.outputs.cache-hit == 'true'
-      run: autopkg repo-update all
+        for repo in $(cat repo_list.txt); do autopkg repo-add "$repo"; done
+        autopkg repo-update all
 
     - name: Run makecatalogs
       run: /usr/local/munki/makecatalogs munki_repo
