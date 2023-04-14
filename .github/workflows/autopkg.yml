@@ -45,7 +45,7 @@ jobs:
       run: |
         /bin/ln -s /Library/AutoPkg/autopkg /usr/local/bin/autopkg
         sudo /bin/mkdir -p /usr/local/autopkg
-        /bin/ln -s /Library/AutoPkg/Python3/Python.framework/Versions/Current/bin/python3 /usr/local/autopkg/python
+        sudo /bin/ln -s /Library/AutoPkg/Python3/Python.framework/Versions/Current/bin/python3 /usr/local/autopkg/python
 
     # - name: Cache Autopkg Repos
     #   uses: actions/cache@v3
