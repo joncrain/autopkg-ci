@@ -32,7 +32,14 @@ jobs:
       with:
         path: /Library/AutoPkg
         key: ${{ runner.os }}-autopkg-code-${{ env.AUTOPKG_VERSION }}
-        
+
+    - name: Cache Autopkg
+      uses: actions/cache@v3
+      id: autopkg-repo-cache
+      with:
+        path: ~/Library/AutoPkg
+        key: ${{ runner.os }}-autopkg-repo-${{ env.AUTOPKG_VERSION }}
+
     # - name: Cache Autopkg Repos
     #   uses: actions/cache@v3
     #   id: autopkg-repo-cache
@@ -53,7 +60,7 @@ jobs:
         sudo installer -pkg /tmp/autopkg.pkg -target /
 
     - name: Checkout your Munki LFS repo
-      uses: actions/checkout@28c7f3d2b5162b5ddd3dfd9a45aa55eaf396478b
+      uses: actions/checkout@v3
       with:
         repository: joncrain/munki_repo
         token: ${{ secrets.MUNKI_GITHUB_TOKEN }}
