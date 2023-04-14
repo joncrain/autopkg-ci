@@ -40,6 +40,10 @@ jobs:
         path: ~/Library/AutoPkg
         key: ${{ runner.os }}-autopkg-repo-${{ env.AUTOPKG_VERSION }}
 
+    - name: Fix Autopkg
+      if: steps.autopkg-code-cache.outputs.cache-hit == 'true'
+      run: ln -s /Library/AutoPkg/autopkg /usr/local/bin/autopkg
+
     # - name: Cache Autopkg Repos
     #   uses: actions/cache@v3
     #   id: autopkg-repo-cache
