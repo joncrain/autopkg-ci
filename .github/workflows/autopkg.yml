@@ -11,6 +11,8 @@ jobs:
   AutoPkg:
     runs-on: macos-latest
     timeout-minutes: 10 # Keeps your builds from running too long
+#     env:
+#       MUNKI_VERSION: 
     steps:
     - name: Checkout AutoPkg recipes (this repo)
       uses: actions/checkout@v3
@@ -53,13 +55,13 @@ jobs:
     - name: Install Munki # needed for some processors
 #       if: steps.munki-code-cache.outputs.cache-hit != 'true'
       run: |
-        curl -L https://github.com/munki/munki/releases/download/v${{ env.MUNKI_VERSION }}/munkitools-${{ env.MUNKI_EXPLICIT_VERSION }}.pkg --output /tmp/munkitools.pkg
+        curl -L https://github.com/munki/munki/releases/download/v${{ vars.MUNKI_VERSION }}/munkitools-${{ vars.MUNKI_EXPLICIT_VERSION }}.pkg --output /tmp/munkitools.pkg
         sudo installer -pkg /tmp/munkitools.pkg -target /
 
     - name: Install AutoPkg
 #       if: steps.autopkg-code-cache.outputs.cache-hit != 'true'
       run: |
-        curl -L https://github.com/autopkg/autopkg/releases/download/v${{ env.AUTOPKG_VERSION }}/autopkg-${{ env.AUTOPKG_VERSION }}.pkg --output /tmp/autopkg.pkg
+        curl -L https://github.com/autopkg/autopkg/releases/download/v${{ vars.AUTOPKG_VERSION }}/autopkg-${{ vars.AUTOPKG_VERSION }}.pkg --output /tmp/autopkg.pkg
         sudo installer -pkg /tmp/autopkg.pkg -target /
 
     - name: Checkout your Munki LFS repo
