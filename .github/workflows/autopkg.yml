@@ -37,15 +37,15 @@ jobs:
       uses: actions/cache@v3
       id: autopkg-repo-cache
       with:
-        path: /Users/runner/Library/AutoPkg
+        path: ./autopkg-ci/repo
         key: ${{ runner.os }}-autopkg-repo-${{ hashFiles('repo_list.txt')}}
 
-    - name: Cache Autopkg Settings
-      uses: actions/cache@v3
-      id: autopkg-settings-cache
-      with:
-        path: /Users/runner/Library/Preferences/com.github.autopkg.plist
-        key: ${{ runner.os }}-autopkg-settings-${{ hashFiles('/Users/runner/Library/Preferences/com.github.autopkg.plist')}}
+#     - name: Cache Autopkg Settings
+#       uses: actions/cache@v3
+#       id: autopkg-settings-cache
+#       with:
+#         path: /Users/runner/Library/Preferences/com.github.autopkg.plist
+#         key: ${{ runner.os }}-autopkg-settings-${{ hashFiles('/Users/runner/Library/Preferences/com.github.autopkg.plist')}}
 
     - name: Download Munki
       if: steps.munki-pkg-cache.outputs.cache-hit != 'true'
@@ -79,14 +79,16 @@ jobs:
         defaults write com.github.autopkg FAIL_RECIPES_WITHOUT_TRUST_INFO -bool YES
         defaults write com.github.autopkg MUNKI_REPO "$GITHUB_WORKSPACE"/munki_repo
         defaults write com.github.autopkg GITHUB_TOKEN "${{ secrets.MUNKI_GITHUB_TOKEN }}"
-        for repo in $(cat repo_list.txt); do autopkg repo-add "$repo"; done
-
-    - name: Configure Git
-      run: |
         git config --global user.name "runner"
         git config --global user.email "runner@githubactions.local"
 
-    - name: Update AutoPkg repos
+    - name: Configure AutoPkg Repos
+      if: steps.autopkg-settings-cache.outputs.cache-hit != 'true'
+      run: |
+        for repo in $(cat repo_list.txt); do autopkg repo-add "$repo"; done
+
+    - name: Update AutoPkg Repos
+      if: steps.autopkg-settings-cache.outputs.cache-hit == 'true'
       run: autopkg repo-update all
 
     - name: Run makecatalogs
