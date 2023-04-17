@@ -37,7 +37,7 @@ jobs:
       uses: actions/cache@v3
       id: autopkg-repo-cache
       with:
-        path: ${{ GITHUB_WORKSPACE }}/repos/
+        path: ${{ env.GITHUB_WORKSPACE }}/repos/
         key: ${{ runner.os }}-autopkg-repo-${{ hashFiles('repo_list.txt')}}
 
 #     - name: Cache Autopkg Settings
