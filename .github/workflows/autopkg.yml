@@ -40,7 +40,7 @@ jobs:
         path: |
           ${{ github.workspace }}/repos/
           /Users/runner/Library/Preferences/com.github.autopkg.plist
-        key: ${{ runner.os }}-repo-cache-${{ github.run_id }}-${{ github.run_attempt }}
+        key: ${{ runner.os }}-autopkg-repo-cache-${{ hashFiles('repo_list.txt') }}
 
     - name: Download Munki
       if: steps.munki-pkg-cache.outputs.cache-hit != 'true'
