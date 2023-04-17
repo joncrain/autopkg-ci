@@ -45,7 +45,7 @@ jobs:
       id: autopkg-settings-cache
       with:
         path: /Users/runner/Library/Preferences/com.github.autopkg.plist
-        key: ${{ runner.os }}-autopkg-settings-${{ hashFiles('/Users/runner/Library/Preferences/com.github.autopkg.plist')}}
+        key: ${{ runner.os }}-autopkg-settings-${{ hashFiles('./autopkg_settings')}}
 
     - name: Download Munki
       if: steps.munki-pkg-cache.outputs.cache-hit != 'true'
@@ -86,7 +86,7 @@ jobs:
         defaults write com.github.autopkg GITHUB_TOKEN "${{ secrets.MUNKI_GITHUB_TOKEN }}"
         git config --global user.name "runner"
         git config --global user.email "runner@githubactions.local"
-        defaults read com.github.autopkg
+        defaults read com.github.autopkg > "$GITHUB_WORKSPACE"/autopkg_settings
 
     - name: Configure AutoPkg Repos
       if: steps.autopkg-repo-cache.outputs.cache-hit != 'true'
