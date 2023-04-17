@@ -72,6 +72,7 @@ jobs:
         path: munki_repo
 
     - name: Configure AutoPkg 1
+      if: steps.autopkg-settings-cache.outputs.cache-hit == 'true'
       run: |
         defaults read com.github.autopkg
 
