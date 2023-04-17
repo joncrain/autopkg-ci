@@ -40,12 +40,12 @@ jobs:
         path: ${{ github.workspace }}/repos/
         key: ${{ runner.os }}-autopkg-repo-${{ hashFiles('repo_list.txt')}}
 
-#     - name: Cache Autopkg Settings
-#       uses: actions/cache@v3
-#       id: autopkg-settings-cache
-#       with:
-#         path: /Users/runner/Library/Preferences/com.github.autopkg.plist
-#         key: ${{ runner.os }}-autopkg-settings-${{ hashFiles('/Users/runner/Library/Preferences/com.github.autopkg.plist')}}
+    - name: Cache Autopkg Settings
+      uses: actions/cache@v3
+      id: autopkg-settings-cache
+      with:
+        path: /Users/runner/Library/Preferences/com.github.autopkg.plist
+        key: ${{ runner.os }}-autopkg-settings-${{ hashFiles('/Users/runner/Library/Preferences/com.github.autopkg.plist')}}
 
     - name: Download Munki
       if: steps.munki-pkg-cache.outputs.cache-hit != 'true'
@@ -71,6 +71,10 @@ jobs:
         ref: refs/heads/main
         path: munki_repo
 
+    - name: Configure AutoPkg 1
+      run: |
+        defaults read com.github.autopkg
+
     - name: Configure AutoPkg
 #       if: steps.autopkg-settings-cache.outputs.cache-hit != 'true'
       run: |
@@ -82,7 +86,6 @@ jobs:
         git config --global user.name "runner"
         git config --global user.email "runner@githubactions.local"
         defaults read com.github.autopkg
-        ls -la "$GITHUB_WORKSPACE"/repos/
 
     - name: Configure AutoPkg Repos
       if: steps.autopkg-repo-cache.outputs.cache-hit != 'true'
@@ -96,19 +99,19 @@ jobs:
     - name: Run makecatalogs
       run: /usr/local/munki/makecatalogs munki_repo
 
-    - name: Run AutoPkg
-      run: |
-        pip3 install requests
-        python3 autopkg_tools.py -l recipe_list.json
-        if [ -f pull_request_title ]; then
-        echo "TITLE=$(cat pull_request_title)" >> $GITHUB_ENV
-        echo "BODY<<EOF" >> $GITHUB_ENV
-        cat pull_request_body >> $GITHUB_ENV
-        echo "EOF" >> $GITHUB_ENV
-        fi
-      env:
-        RECIPE: ${{ github.event.inputs.recipe }}
-        SLACK_WEBHOOK_TOKEN: ${{ secrets.autopkg_slack_token }}
+#     - name: Run AutoPkg
+#       run: |
+#         pip3 install requests
+#         python3 autopkg_tools.py -l recipe_list.json
+#         if [ -f pull_request_title ]; then
+#         echo "TITLE=$(cat pull_request_title)" >> $GITHUB_ENV
+#         echo "BODY<<EOF" >> $GITHUB_ENV
+#         cat pull_request_body >> $GITHUB_ENV
+#         echo "EOF" >> $GITHUB_ENV
+#         fi
+#       env:
+#         RECIPE: ${{ github.event.inputs.recipe }}
+#         SLACK_WEBHOOK_TOKEN: ${{ secrets.autopkg_slack_token }}
 
     - name: Create Trust Info pull request
       if: env.TITLE
