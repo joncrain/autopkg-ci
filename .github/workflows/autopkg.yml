@@ -40,7 +40,7 @@ jobs:
         path: |
           ${{ github.workspace }}/repos/
           /Users/runner/Library/Preferences/com.github.autopkg.plist
-        key: ${{ runner.os }}-autopkg-repo-${{ steps.hashing.outputs.hash }}
+        key: ${{ runner.os }}-repo-cache-${{ github.run_id }}-${{ github.run_attempt }}
 
     - name: Download Munki
       if: steps.munki-pkg-cache.outputs.cache-hit != 'true'
@@ -88,12 +88,6 @@ jobs:
 
     - name: Run makecatalogs
       run: /usr/local/munki/makecatalogs munki_repo
-
-    - name: Hash Repo Folder
-      id: hashing
-      uses: theowenyoung/folder-hash@v3
-      with:
-        path: ${{ github.workspace }}/repos/
 
 #     - name: Run AutoPkg
 #       run: |
