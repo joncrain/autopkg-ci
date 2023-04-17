@@ -19,15 +19,15 @@ jobs:
     - name: Checkout AutoPkg recipes (this repo)
       uses: actions/checkout@v3
 
-    - name: Cache Munki
-      uses: john-shaffer/cache@d4e5f5ecb5773a5c1ce60d764950bbd161baa303
+    - name: Cache Munki Pkg
+      uses: actions/cache@v3
       id: munki-pkg-cache
       with:
         path: ./munkitools.pkg
         key: ${{ runner.os }}-munki-pkg-${{ env.MUNKI_EXPLICIT_VERSION }}
 
-    - name: Cache Autopkg Code
-      uses: john-shaffer/cache@d4e5f5ecb5773a5c1ce60d764950bbd161baa303
+    - name: Cache Autopkg Pkg
+      uses: actions/cache@v3
       id: autopkg-pkg-cache
       with:
         path: ./autopkg.pkg
@@ -72,7 +72,7 @@ jobs:
         path: munki_repo
 
     - name: Configure AutoPkg
-      if: steps.autopkg-settings-cache.outputs.cache-hit != 'true'
+#       if: steps.autopkg-settings-cache.outputs.cache-hit != 'true'
       run: |
         defaults write com.github.autopkg RECIPE_OVERRIDE_DIRS "$(pwd)"/overrides/
         defaults write com.github.autopkg RECIPE_REPO_DIR "$(pwd)"/repos/
