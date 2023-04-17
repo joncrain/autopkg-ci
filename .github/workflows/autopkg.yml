@@ -33,12 +33,6 @@ jobs:
         path: ./autopkg.pkg
         key: ${{ runner.os }}-autopkg-pkg-${{ env.AUTOPKG_VERSION }}
 
-    - name: Hash Repo Folder
-      id: hashing
-      uses: theowenyoung/folder-hash@v3
-      with:
-        path: ${{ github.workspace }}/repos/
-
     - name: Cache Autopkg Repo
       uses: actions/cache@v3
       id: autopkg-repo-cache
@@ -94,6 +88,12 @@ jobs:
 
     - name: Run makecatalogs
       run: /usr/local/munki/makecatalogs munki_repo
+
+    - name: Hash Repo Folder
+      id: hashing
+      uses: theowenyoung/folder-hash@v3
+      with:
+        path: ${{ github.workspace }}/repos/
 
 #     - name: Run AutoPkg
 #       run: |
