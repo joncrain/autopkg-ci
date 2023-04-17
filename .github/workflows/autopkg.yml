@@ -40,14 +40,7 @@ jobs:
         path: |
           ${{ github.workspace }}/repos/
           /Users/runner/Library/Preferences/com.github.autopkg.plist
-        key: ${{ runner.os }}-autopkg-repo-${{ hashFiles('repos/')}}
-
-#     - name: Cache Autopkg Settings
-#       uses: actions/cache@v3
-#       id: autopkg-settings-cache
-#       with:
-#         path: /Users/runner/Library/Preferences/com.github.autopkg.plist
-#         key: ${{ runner.os }}-autopkg-settings-${{ hashFiles('./autopkg_settings')}}
+        key: ${{ runner.os }}-autopkg-repo-${{ hashFiles('**/repos')}}
 
     - name: Download Munki
       if: steps.munki-pkg-cache.outputs.cache-hit != 'true'
@@ -72,11 +65,6 @@ jobs:
         fetch-depth: 1
         ref: refs/heads/main
         path: munki_repo
-
-    - name: Configure AutoPkg 1
-      if: steps.autopkg-repo-cache.outputs.cache-hit == 'true'
-      run: |
-        defaults read com.github.autopkg
 
     - name: Configure AutoPkg
       if: steps.autopkg-repo-cache.outputs.cache-hit != 'true'
