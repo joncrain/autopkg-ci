@@ -83,12 +83,12 @@ jobs:
         git config --global user.email "runner@githubactions.local"
 
     - name: Configure AutoPkg Repos
-      if: steps.autopkg-settings-cache.outputs.cache-hit != 'true'
+      if: steps.autopkg-repo-cache.outputs.cache-hit != 'true'
       run: |
         for repo in $(cat repo_list.txt); do autopkg repo-add "$repo"; done
 
     - name: Update AutoPkg Repos
-      if: steps.autopkg-settings-cache.outputs.cache-hit == 'true'
+      if: steps.autopkg-repo-cache.outputs.cache-hit == 'true'
       run: autopkg repo-update all
 
     - name: Run makecatalogs
