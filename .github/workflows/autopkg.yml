@@ -33,6 +33,12 @@ jobs:
         path: ./autopkg.pkg
         key: ${{ runner.os }}-autopkg-pkg-${{ env.AUTOPKG_VERSION }}
 
+    - name: Hash Repo Folder
+      id: hashing
+      uses: theowenyoung/folder-hash@v3
+      with:
+        path: ${{ github.workspace }}/repos/
+
     - name: Cache Autopkg Repo
       uses: actions/cache@v3
       id: autopkg-repo-cache
@@ -40,7 +46,7 @@ jobs:
         path: |
           ${{ github.workspace }}/repos/
           /Users/runner/Library/Preferences/com.github.autopkg.plist
-        key: ${{ runner.os }}-autopkg-repo-${{ hashFiles('**/repos')}}
+        key: ${{ runner.os }}-autopkg-repo-${{ steps.hashing.outputs.hash }}
 
     - name: Download Munki
       if: steps.munki-pkg-cache.outputs.cache-hit != 'true'
