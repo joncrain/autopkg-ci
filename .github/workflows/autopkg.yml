@@ -97,25 +97,25 @@ jobs:
         for repo in $(cat repo_list.txt); do autopkg repo-add "$repo"; done
 
     - name: Update AutoPkg Repos
-      if: steps.autopkg-repo-cache.outputs.cache-hit == 'true'
+      if: steps.download-artifact.outputs.found_artifact == 'true'
       run: autopkg repo-update all
 
     - name: Run makecatalogs
       run: /usr/local/munki/makecatalogs munki_repo
 
-#     - name: Run AutoPkg
-#       run: |
-#         pip3 install requests
-#         python3 autopkg_tools.py -l recipe_list.json
-#         if [ -f pull_request_title ]; then
-#         echo "TITLE=$(cat pull_request_title)" >> $GITHUB_ENV
-#         echo "BODY<<EOF" >> $GITHUB_ENV
-#         cat pull_request_body >> $GITHUB_ENV
-#         echo "EOF" >> $GITHUB_ENV
-#         fi
-#       env:
-#         RECIPE: ${{ github.event.inputs.recipe }}
-#         SLACK_WEBHOOK_TOKEN: ${{ secrets.autopkg_slack_token }}
+    - name: Run AutoPkg
+      run: |
+        pip3 install requests
+        python3 autopkg_tools.py -l recipe_list.json
+        if [ -f pull_request_title ]; then
+        echo "TITLE=$(cat pull_request_title)" >> $GITHUB_ENV
+        echo "BODY<<EOF" >> $GITHUB_ENV
+        cat pull_request_body >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
+        fi
+      env:
+        RECIPE: ${{ github.event.inputs.recipe }}
+        SLACK_WEBHOOK_TOKEN: ${{ secrets.autopkg_slack_token }}
 
     - name: Compress repo (to get around possible invalid characters)
       run: tar -cvf repos.tar "$GITHUB_WORKSPACE"/repos/ /Users/runner/Library/Preferences/com.github.autopkg.plist
