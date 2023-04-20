@@ -40,6 +40,7 @@ jobs:
         check_artifacts: true
         name: 'autopkg-repo'
         path: ${{ github.workspace }}/output/
+        if_no_artifact_found: ignore
 
     - name: Decompress repo
       if: steps.download-artifact.outputs.found_artifact == 'true'
