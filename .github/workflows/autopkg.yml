@@ -44,7 +44,7 @@ jobs:
     - name: Decompress repo
       if: steps.download-artifact.outputs.found_artifact == 'true'
       run: |
-        tar -xvf "$GITHUB_WORKSPACE"/output/work/autopkg-ci/autopkg-ci/repos.tar -C /
+        tar -xvf "$GITHUB_WORKSPACE"/output/repos.tar -C /
 
 #    - name: Cache Autopkg Repo
 #      uses: actions/cache@v3
