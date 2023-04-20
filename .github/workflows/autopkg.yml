@@ -110,7 +110,9 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: autopkg-repo
-        path: ${{ github.workspace }}/repos.tar
+        path: |
+          ${{ github.workspace }}/repos.tar
+          /Users/runner/Library/Preferences/com.github.autopkg.plist
 
     - name: Create Trust Info pull request
       if: env.TITLE
