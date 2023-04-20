@@ -45,8 +45,6 @@ jobs:
       if: steps.download-artifact.outputs.found_artifact == 'true'
       run: |
         tar -xvf "$GITHUB_WORKSPACE"/output/work/autopkg-ci/autopkg-ci/repos.tar -C /
-        ls -la "$GITHUB_WORKSPACE"
-        ls -la "$GITHUB_WORKSPACE"/repos
 
 #    - name: Cache Autopkg Repo
 #      uses: actions/cache@v3
@@ -119,15 +117,13 @@ jobs:
 #         SLACK_WEBHOOK_TOKEN: ${{ secrets.autopkg_slack_token }}
 
     - name: Compress repo (to get around possible invalid characters)
-      run: tar -cvf repos.tar "$GITHUB_WORKSPACE"/repos/
+      run: tar -cvf repos.tar "$GITHUB_WORKSPACE"/repos/ /Users/runner/Library/Preferences/com.github.autopkg.plist
 
     - name: Upload Autopkg files as artifact
       uses: actions/upload-artifact@v3
       with:
         name: autopkg-repo
         path: ${{ github.workspace }}/repos.tar
-
-# /Users/runner/Library/Preferences/com.github.autopkg.plist
 
     - name: Create Trust Info pull request
       if: env.TITLE
