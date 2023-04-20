@@ -39,12 +39,12 @@ jobs:
       with:
         check_artifacts: true
         name: 'autopkg-repo'
-        path: ${{ github.workspace }}/repos.tar
+        path: ${{ github.workspace }}/output/
 
     - name: Decompress repo
       if: steps.download-artifact.outputs.found_artifact == 'true'
       run: |
-        tar -xvf "$GITHUB_WORKSPACE"/repos.tar
+        tar -xvf "$GITHUB_WORKSPACE"/output/work/autopkg-ci/autopkg-ci/repos.tar -C /
         ls -la "$GITHUB_WORKSPACE"
         ls -la "$GITHUB_WORKSPACE"/repos
 
