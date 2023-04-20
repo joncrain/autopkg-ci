@@ -103,6 +103,14 @@ jobs:
 #         RECIPE: ${{ github.event.inputs.recipe }}
 #         SLACK_WEBHOOK_TOKEN: ${{ secrets.autopkg_slack_token }}
 
+    - name: Upload Autopkg files as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: autopkg-repo
+        path: |
+          ${{ github.workspace }}/repos/
+          /Users/runner/Library/Preferences/com.github.autopkg.plist
+
     - name: Create Trust Info pull request
       if: env.TITLE
       run: |
