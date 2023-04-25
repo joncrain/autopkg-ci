@@ -43,15 +43,6 @@ jobs:
       run: |
         tar -xvf "$GITHUB_WORKSPACE"/output/repos.tar -C /
 
-#    - name: Cache Autopkg Repo
-#      uses: actions/cache@v3
-#      id: autopkg-repo-cache
-#      with:
-#        path: |
-#          ${{ github.workspace }}/repos/
-#          /Users/runner/Library/Preferences/com.github.autopkg.plist
-#        key: ${{ runner.os }}-autopkg-repo-cache-${{ hashFiles('repo_list.txt') }}
-
     - name: Download Munki
       if: steps.munki-pkg-cache.outputs.cache-hit != 'true'
       run: |
