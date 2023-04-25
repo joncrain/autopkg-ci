@@ -24,14 +24,14 @@ jobs:
       id: munki-pkg-cache
       with:
         path: ./munkitools.pkg
-        key: ${{ runner.os }}-munki-pkg-${{ env.MUNKI_EXPLICIT_VERSION }}
+        key: ${{ runner.os }}-munki-pkg-${{ vars.MUNKI_EXPLICIT_VERSION }}
 
     - name: Cache Autopkg Pkg
       uses: actions/cache@v3
       id: autopkg-pkg-cache
       with:
         path: ./autopkg.pkg
-        key: ${{ runner.os }}-autopkg-pkg-${{ env.AUTOPKG_VERSION }}
+        key: ${{ runner.os }}-autopkg-pkg-${{ vars.AUTOPKG_VERSION }}
 
     - name: Download artifact
       id: download-artifact
