@@ -1,4 +1,8 @@
 [
+   "AdobeReader.munki.recipe",
+   "Cyberduck.munki.recipe",
    "Firefox.munki.recipe",
-   "test-munki-pkg.munki.recipe"
+   "GoogleChrome.munki.recipe",
+   "MicrosoftEdge.munki.recipe",
+   "Spotify.munki.recipe",
 ]

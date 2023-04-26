@@ -1,3 +1,2 @@
 https://github.com/autopkg/recipes.git
-https://github.com/autopkg/joncrain-recipes.git
 https://github.com/hjuutilainen/autopkg-virustotalanalyzer.git

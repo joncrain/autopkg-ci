@@ -11,7 +11,7 @@ jobs:
   AutoPkg:
     strategy:
         matrix:
-          target:  ["Firefox.munki", "test-munki-pkg.munki"]
+          target:  ["Firefox.munki", "GoogleChrome.munki", "Cyberduck.munki", "AdobeReader.munki", "MicrosoftEdge.munki", "Spotify.munki"]
     uses: joncrain/autopkg-ci/.github/workflows/reusable_autopkg.yml@main
     with:
       recipe_override: ${{ matrix.target }}
