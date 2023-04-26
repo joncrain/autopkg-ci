@@ -19,14 +19,14 @@ jobs:
       uses: actions/cache@v3
       id: munki-pkg-cache
       with:
-        path: ./munkitools.pkg
+        path: ${{ github.workspace }}/munkitools.pkg
         key: ${{ runner.os }}-munki-pkg-${{ vars.MUNKI_EXPLICIT_VERSION }}
 
     - name: Cache Autopkg Pkg
       uses: actions/cache@v3
       id: autopkg-pkg-cache
       with:
-        path: ./autopkg.pkg
+        path: ${{ github.workspace }}/autopkg.pkg
         key: ${{ runner.os }}-autopkg-pkg-${{ vars.AUTOPKG_VERSION }}
 
     - name: Download artifact
@@ -46,12 +46,12 @@ jobs:
     - name: Download Munki
       if: steps.munki-pkg-cache.outputs.cache-hit != 'true'
       run: |
-        curl -L https://github.com/munki/munki/releases/download/v${{ vars.MUNKI_VERSION }}/munkitools-${{ vars.MUNKI_EXPLICIT_VERSION }}.pkg --output ./munkitools.pkg
+        curl -L https://github.com/munki/munki/releases/download/v${{ vars.MUNKI_VERSION }}/munkitools-${{ vars.MUNKI_EXPLICIT_VERSION }}.pkg --output ${{ github.workspace }}/munkitools.pkg
 
     - name: Download AutoPkg
       if: steps.autopkg-pkg-cache.outputs.cache-hit != 'true'
       run: |
-        curl -L https://github.com/autopkg/autopkg/releases/download/v${{ vars.AUTOPKG_VERSION }}/autopkg-${{ vars.AUTOPKG_VERSION }}.pkg --output ./autopkg.pkg
+        curl -L https://github.com/autopkg/autopkg/releases/download/v${{ vars.AUTOPKG_VERSION }}/autopkg-${{ vars.AUTOPKG_VERSION }}.pkg --output ${{ github.workspace }}/autopkg.pkg
 
     - name: Install Munki and AutoPkg
       run: |
