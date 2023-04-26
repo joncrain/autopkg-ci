@@ -31,6 +31,7 @@ SLACK_WEBHOOK = os.environ.get("SLACK_WEBHOOK_TOKEN", None)
 MUNKI_REPO = os.path.join(os.getenv("GITHUB_WORKSPACE", "/tmp/"), "munki_repo")
 OVERRIDES_DIR = os.path.relpath("overrides/")
 
+
 class Recipe(object):
     def __init__(self, path):
         self.path = os.path.join(OVERRIDES_DIR, path)
@@ -309,7 +310,11 @@ def slack_alert(recipe, opts):
                         "username": "Autopkg",
                         "as_user": True,
                         "title": task_title,
-                        "color": "warning" if not recipe.verified else "good" if not recipe.error else "danger",
+                        "color": "warning"
+                        if not recipe.verified
+                        else "good"
+                        if not recipe.error
+                        else "danger",
                         "text": task_description,
                         "mrkdwn_in": ["text"],
                     }
@@ -351,7 +356,6 @@ def main():
     parser.add_option(
         "-r",
         "--recipe",
-        action="store_true",
         help="Run a single recipe.",
     )
     parser.add_option(
@@ -374,7 +378,9 @@ def main():
     print(opts.recipe)
     print(RECIPE_TO_RUN)
 
-    recipes = RECIPE_TO_RUN.split(", ") if RECIPE_TO_RUN else opts.list if opts.list else None
+    recipes = (
+        RECIPE_TO_RUN.split(", ") if RECIPE_TO_RUN else opts.list if opts.list else None
+    )
     if recipes is None:
         print("Recipe --list or RECIPE_TO_RUN not provided!")
         sys.exit(1)
