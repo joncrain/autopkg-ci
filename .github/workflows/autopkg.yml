@@ -109,6 +109,8 @@ jobs:
       run: |
         tar -cvf repos.tar "$GITHUB_WORKSPACE"/repos/ /Users/runner/Library/Preferences/com.github.autopkg.plist
         echo NEW_REPO_CHECKSUM="$(shasum repos.tar | awk '{ print $1 }')" >> "$GITHUB_ENV"
+        echo ${{ env.REPO_CHECKSUM }}
+        echo ${{ env.NEW_REPO_CHECKSUM }}
 
     - name: Upload Autopkg files as artifact
       uses: actions/upload-artifact@v3
