@@ -17,3 +17,4 @@ jobs:
       recipe_override: ${{ matrix.target }}
     secrets:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      MUNKI_GITHUB_TOKEN: ${{ secrets.MUNKI_GITHUB_TOKEN }}
