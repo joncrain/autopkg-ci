@@ -371,10 +371,8 @@ def main():
 
     failures = []
 
-    if opts.recipe:
-        single_recipe = True
-    else:
-        single_recipe = False
+    print(opts.recipe)
+    print(RECIPE_TO_RUN)
 
     recipes = RECIPE_TO_RUN.split(", ") if RECIPE_TO_RUN else opts.list if opts.list else None
     if recipes is None:
