@@ -350,6 +350,12 @@ def main():
         help="Disables recipe verification.",
     )
     parser.add_option(
+        "-r",
+        "--recipe",
+        action="store_true",
+        help="Run a single recipe.",
+    )
+    parser.add_option(
         "-i",
         "--icons",
         action="store_true",
@@ -362,6 +368,9 @@ def main():
     DEBUG = bool(opts.debug)
 
     failures = []
+
+    if not RECIPE_TO_RUN:
+        RECIPE_TO_RUN = opts.recipe if opts.recipe else None
 
     recipes = RECIPE_TO_RUN.split(", ") if RECIPE_TO_RUN else opts.list if opts.list else None
     if recipes is None:
