@@ -6,6 +6,11 @@ on:
       recipe_override:
         required: false
         type: string
+    secrets:
+      MUNKI_GITHUB_TOKEN:
+        required: true
+      autopkg_slack_token:
+        required: false
 
 jobs:
   AutoPkg:

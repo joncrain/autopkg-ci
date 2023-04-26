@@ -15,3 +15,5 @@ jobs:
     uses: joncrain/autopkg-ci/.github/workflows/reusable_autopkg.yml@main
     with:
       recipe_override: ${{ matrix.target }}
+    secrets:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
