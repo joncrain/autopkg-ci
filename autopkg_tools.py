@@ -379,7 +379,7 @@ def main():
     if recipes is None:
         print("Recipe --list or RECIPE_TO_RUN not provided!")
         sys.exit(1)
-    recipes = parse_recipes(recipes, single_recipe=single_recipe)
+    recipes = parse_recipes(recipes)
     for recipe in recipes:
         handle_recipe(recipe, opts)
         slack_alert(recipe, opts)
