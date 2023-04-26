@@ -15,35 +15,6 @@ jobs:
     - name: Checkout AutoPkg recipes (this repo)
       uses: actions/checkout@v3
 
-    - name: Cache Munki Pkg
-      uses: actions/cache@v3
-      id: munki-pkg-cache
-      with:
-        path: ${{ github.workspace }}/munkitools.pkg
-        key: ${{ runner.os }}-munki-pkg-${{ vars.MUNKI_EXPLICIT_VERSION }}
-
-    - name: Cache Autopkg Pkg
-      uses: actions/cache@v3
-      id: autopkg-pkg-cache
-      with:
-        path: ${{ github.workspace }}/autopkg.pkg
-        key: ${{ runner.os }}-autopkg-pkg-${{ vars.AUTOPKG_VERSION }}
-
-    - name: Download artifact
-      id: download-artifact
-      uses: dawidd6/action-download-artifact@v2
-      with:
-        check_artifacts: true
-        name: 'autopkg-repo'
-        path: ${{ github.workspace }}/
-        if_no_artifact_found: ignore
-
-    - name: Decompress repo
-      if: steps.download-artifact.outputs.found_artifact == 'true'
-      run: |
-        echo REPO_CHECKSUM="$(shasum "$GITHUB_WORKSPACE"/repos.tar | awk '{ print $1 }')" >> "$GITHUB_ENV"
-        tar -xvf "$GITHUB_WORKSPACE"/repos.tar -C /
-
     - name: Download Munki
       if: steps.munki-pkg-cache.outputs.cache-hit != 'true'
       run: |
@@ -94,32 +65,18 @@ jobs:
     - name: Run AutoPkg
       run: |
         pip3 install requests
-        python3 autopkg_tools.py -l recipe_list.json
-        if [ -f pull_request_title ]; then
-        echo "TITLE=$(cat pull_request_title)" >> $GITHUB_ENV
-        echo "BODY<<EOF" >> $GITHUB_ENV
-        cat pull_request_body >> $GITHUB_ENV
-        echo "EOF" >> $GITHUB_ENV
-        fi
+        while read p; do
+          python3 autopkg_tools.py -l "$p" &
+          # if [ -f pull_request_title ]; then
+          # echo "TITLE=$(cat pull_request_title)" >> $GITHUB_ENV
+          # echo "BODY<<EOF" >> $GITHUB_ENV
+          # cat pull_request_body >> $GITHUB_ENV
+          # echo "EOF" >> $GITHUB_ENV
+          # fi
+        done < recipe_list.txt
       env:
         RECIPE: ${{ github.event.inputs.recipe }}
         SLACK_WEBHOOK_TOKEN: ${{ secrets.autopkg_slack_token }}
-
-    - name: Compress repo (to get around possible invalid characters)
-      run: |
-        tar -cvf repos.tar "$GITHUB_WORKSPACE"/repos/ /Users/runner/Library/Preferences/com.github.autopkg.plist
-        echo NEW_REPO_CHECKSUM="$(shasum ${{ github.workspace }}/repos.tar | awk '{ print $1 }')" >> "$GITHUB_ENV"
-        echo Old repo: ${{ env.REPO_CHECKSUM }}
-        echo New repo: ${{ env.NEW_REPO_CHECKSUM }}
-        echo NEW_REPO_CHECKSUM="$(shasum ${{ github.workspace }}/repos.tar | awk '{ print $1 }')"
-
-    - name: Upload Autopkg files as artifact
-      uses: actions/upload-artifact@v3
-      if: env.REPO_CHECKSUM != env.NEW_REPO_CHECKSUM
-      with:
-        name: autopkg-repo
-        path: ${{ github.workspace }}/repos.tar
-        retention-days: 14
 
     - name: Create Trust Info pull request
       if: env.TITLE
