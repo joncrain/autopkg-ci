@@ -41,7 +41,7 @@ jobs:
     - name: Decompress repo
       if: steps.download-artifact.outputs.found_artifact == 'true'
       run: |
-        echo REPO_CHECKSUM="$(shasum "$GITHUB_WORKSPACE"/output/repos.tar | awk '{ print $1 }')" >> "$GITHUB_ENV"
+        echo REPO_CHECKSUM="$(shasum "$GITHUB_WORKSPACE"/repos.tar | awk '{ print $1 }')" >> "$GITHUB_ENV"
         tar -xvf "$GITHUB_WORKSPACE"/repos.tar -C /
 
     - name: Download Munki
@@ -111,6 +111,7 @@ jobs:
         echo NEW_REPO_CHECKSUM="$(shasum ${{ github.workspace }}/repos.tar | awk '{ print $1 }')" >> "$GITHUB_ENV"
         echo Old repo: ${{ env.REPO_CHECKSUM }}
         echo New repo: ${{ env.NEW_REPO_CHECKSUM }}
+        echo NEW_REPO_CHECKSUM="$(shasum ${{ github.workspace }}/repos.tar | awk '{ print $1 }')"
 
     - name: Upload Autopkg files as artifact
       uses: actions/upload-artifact@v3
