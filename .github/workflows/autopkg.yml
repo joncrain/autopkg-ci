@@ -43,7 +43,7 @@ jobs:
       id: repos-cache
       with:
         path: ${{ github.workspace }}/repos.tar
-        key: ${{ runner.os }}-repos-${{ hashFiles('repos.tar') }}
+        key: ${{ runner.os }}-repos-${{ hashFiles('${{ github.workspace }}/repos.tar') }}
 
     - name: Decompress repos
       if: steps.repos-cache.outputs.cache-hit == 'true'
