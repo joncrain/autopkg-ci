@@ -1,0 +1,18 @@
+name: AutoPkg run
+
+on:
+  workflow_dispatch: # manually triggered
+    inputs:
+      recipe:
+        description: Recipe to Run (optional)
+        required: false
+
+jobs:
+  AutoPkg:
+    strategy:
+        matrix:
+          target:  ["Firefox.munki", "test-munki-pkg.munki"]
+    uses: joncrain/autopkg-ci/actions/reusable_autopkg.yml@main
+    with:
+      recipe_override: ${{ matrix.target }}
+~
