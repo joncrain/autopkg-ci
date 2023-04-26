@@ -12,6 +12,6 @@ jobs:
     strategy:
         matrix:
           target:  ["Firefox.munki", "test-munki-pkg.munki"]
-    uses: joncrain/autopkg-ci/actions/reusable_autopkg.yml@main
+    uses: joncrain/autopkg-ci/.github/workflows/reusable_autopkg.yml@main
     with:
       recipe_override: ${{ matrix.target }}
