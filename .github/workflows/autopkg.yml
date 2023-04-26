@@ -107,8 +107,8 @@ jobs:
 
     - name: Compress repo (to get around possible invalid characters)
       run: |
-        tar -cvf repos.tar "$GITHUB_WORKSPACE"/repos/ /Users/runner/Library/Preferences/com.github.autopkg.plist
-        echo NEW_REPO_CHECKSUM="$(shasum repos.tar | awk '{ print $1 }')" >> "$GITHUB_ENV"
+        tar -cvf ${{ github.workspace }}/repos.tar "$GITHUB_WORKSPACE"/repos/ /Users/runner/Library/Preferences/com.github.autopkg.plist
+        echo NEW_REPO_CHECKSUM="$(shasum ${{ github.workspace }}/repos.tar | awk '{ print $1 }')" >> "$GITHUB_ENV"
         echo ${{ env.REPO_CHECKSUM }}
         echo ${{ env.NEW_REPO_CHECKSUM }}
 
