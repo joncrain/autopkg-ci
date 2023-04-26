@@ -3,3 +3,18 @@ overrides/Firefox.munki.recipe: FAILED
     Audit the recipe, then store trust info by running:
     	autopkg make-override overrides/Firefox.munki.recipe
 
+overrides/Firefox.munki.recipe: FAILED
+    No trust information present.
+    Audit the recipe, then store trust info by running:
+    	autopkg make-override overrides/Firefox.munki.recipe
+
+overrides/Firefox.munki.recipe: FAILED
+    No trust information present.
+    Audit the recipe, then store trust info by running:
+    	autopkg make-override overrides/Firefox.munki.recipe
+
+overrides/GoogleChrome.munki.recipe: FAILED
+    No trust information present.
+    Audit the recipe, then store trust info by running:
+    	autopkg make-override overrides/GoogleChrome.munki.recipe
+

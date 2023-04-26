@@ -74,6 +74,8 @@ jobs:
           # echo "EOF" >> $GITHUB_ENV
           # fi
         done < recipe_list.txt
+        wait
+        echo "Recipes have finished."
       env:
         RECIPE: ${{ github.event.inputs.recipe }}
         SLACK_WEBHOOK_TOKEN: ${{ secrets.autopkg_slack_token }}
