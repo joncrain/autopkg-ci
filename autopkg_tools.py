@@ -30,7 +30,6 @@ DEBUG = True
 SLACK_WEBHOOK = os.environ.get("SLACK_WEBHOOK_TOKEN", None)
 MUNKI_REPO = os.path.join(os.getenv("GITHUB_WORKSPACE", "/tmp/"), "munki_repo")
 OVERRIDES_DIR = os.path.relpath("overrides/")
-RECIPE_TO_RUN = os.environ.get("RECIPE", None)
 
 class Recipe(object):
     def __init__(self, path):
@@ -369,8 +368,8 @@ def main():
 
     failures = []
 
-    if not RECIPE_TO_RUN:
-        RECIPE_TO_RUN = opts.recipe if opts.recipe else None
+    global RECIPE_TO_RUN
+    RECIPE_TO_RUN = os.environ.get("RECIPE", opts.recipe if opts.recipe else None)
 
     recipes = RECIPE_TO_RUN.split(", ") if RECIPE_TO_RUN else opts.list if opts.list else None
     if recipes is None:
