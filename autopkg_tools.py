@@ -229,10 +229,10 @@ def handle_recipe(recipe, opts):
     return recipe
 
 
-def parse_recipes(recipes):
+def parse_recipes(recipes, opts):
     recipe_list = []
     ## Added this section so that we can run individual recipes
-    if RECIPE_TO_RUN:
+    if RECIPE_TO_RUN or opts.recipe:
         for recipe in recipes:
             ext = os.path.splitext(recipe)[1]
             if ext != ".recipe":
@@ -379,7 +379,7 @@ def main():
     if recipes is None:
         print("Recipe --list or RECIPE_TO_RUN not provided!")
         sys.exit(1)
-    recipes = parse_recipes(recipes)
+    recipes = parse_recipes(recipes, opts)
     for recipe in recipes:
         handle_recipe(recipe, opts)
         slack_alert(recipe, opts)
