@@ -30,7 +30,6 @@ DEBUG = True
 SLACK_WEBHOOK = os.environ.get("SLACK_WEBHOOK_TOKEN", None)
 MUNKI_REPO = os.path.join(os.getenv("GITHUB_WORKSPACE", "/tmp/"), "munki_repo")
 OVERRIDES_DIR = os.path.relpath("overrides/")
-RECIPE_TO_RUN = os.environ.get("RECIPE", None)
 
 class Recipe(object):
     def __init__(self, path):
@@ -228,10 +227,10 @@ def handle_recipe(recipe, opts):
     return recipe
 
 
-def parse_recipes(recipes, single_recipe=False):
+def parse_recipes(recipes):
     recipe_list = []
     ## Added this section so that we can run individual recipes
-    if RECIPE_TO_RUN or single_recipe:
+    if RECIPE_TO_RUN:
         for recipe in recipes:
             ext = os.path.splitext(recipe)[1]
             if ext != ".recipe":
@@ -367,6 +366,9 @@ def main():
     global DEBUG
     DEBUG = bool(opts.debug)
 
+    global RECIPE_TO_RUN
+    RECIPE_TO_RUN = os.environ.get("RECIPE", opts.recipe if opts.recipe else None)
+
     failures = []
 
     if opts.recipe:
@@ -374,7 +376,7 @@ def main():
     else:
         single_recipe = False
 
-    recipes = RECIPE_TO_RUN.split(", ") if RECIPE_TO_RUN else opts.recipe if opts.recipe else opts.list if opts.list else None
+    recipes = RECIPE_TO_RUN.split(", ") if RECIPE_TO_RUN else opts.list if opts.list else None
     if recipes is None:
         print("Recipe --list or RECIPE_TO_RUN not provided!")
         sys.exit(1)
