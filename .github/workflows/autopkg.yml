@@ -29,25 +29,19 @@ jobs:
         path: ${{ github.workspace }}/autopkg.pkg
         key: ${{ runner.os }}-autopkg-pkg-${{ vars.AUTOPKG_VERSION }}
 
-#    - name: Download artifact
-#      id: download-artifact
-#      uses: dawidd6/action-download-artifact@v2
-#      with:
-#        check_artifacts: true
-#        name: 'autopkg-repo'
-#        path: ${{ github.workspace }}/output/
-#        if_no_artifact_found: ignore
-
-    - name: Cache Repos
-      uses: actions/cache@v3
-      id: repos-cache
+    - name: Download artifact
+      id: download-artifact
+      uses: dawidd6/action-download-artifact@v2
       with:
-        path: ${{ github.workspace }}/repos.tar
-        key: ${{ runner.os }}-repos-${{ hashFiles('${{ github.workspace }}/repos.tar') }}
+        check_artifacts: true
+        name: 'autopkg-repo'
+        path: ${{ github.workspace }}/
+        if_no_artifact_found: ignore
 
-    - name: Decompress repos
-      if: steps.repos-cache.outputs.cache-hit == 'true'
+    - name: Decompress repo
+      if: steps.download-artifact.outputs.found_artifact == 'true'
       run: |
+        echo REPO_CHECKSUM="$(shasum "$GITHUB_WORKSPACE"/output/repos.tar | awk '{ print $1 }')" >> "$GITHUB_ENV"
         tar -xvf "$GITHUB_WORKSPACE"/repos.tar -C /
 
     - name: Download Munki
@@ -62,8 +56,8 @@ jobs:
 
     - name: Install Munki and AutoPkg
       run: |
-        sudo installer -pkg ${{ github.workspace }}/munkitools.pkg -target /
-        sudo installer -pkg ${{ github.workspace }}/autopkg.pkg -target /
+        sudo installer -pkg ./munkitools.pkg -target /
+        sudo installer -pkg ./autopkg.pkg -target /
 
     - name: Checkout your Munki LFS repo
       uses: actions/checkout@v3
@@ -75,7 +69,7 @@ jobs:
         path: munki_repo
 
     - name: Configure AutoPkg
-      if: steps.repos-cache.outputs.cache-hit != 'true'
+      if: steps.download-artifact.outputs.found_artifact != 'true'
       run: |
         defaults write com.github.autopkg RECIPE_OVERRIDE_DIRS "$GITHUB_WORKSPACE"/overrides/
         defaults write com.github.autopkg RECIPE_REPO_DIR "$GITHUB_WORKSPACE"/repos/
@@ -86,12 +80,12 @@ jobs:
         git config --global user.email "runner@githubactions.local"
 
     - name: Configure AutoPkg Repos
-      if: steps.repos-cache.outputs.cache-hit != 'true'
+      if: steps.download-artifact.outputs.found_artifact != 'true'
       run: |
         for repo in $(cat repo_list.txt); do autopkg repo-add "$repo"; done
 
     - name: Update AutoPkg Repos
-      if: steps.repos-cache.outputs.cache-hit == 'true'
+      if: steps.download-artifact.outputs.found_artifact == 'true'
       run: autopkg repo-update all
 
     - name: Run makecatalogs
@@ -111,17 +105,20 @@ jobs:
         RECIPE: ${{ github.event.inputs.recipe }}
         SLACK_WEBHOOK_TOKEN: ${{ secrets.autopkg_slack_token }}
 
-    - name: Compress repos
+    - name: Compress repo (to get around possible invalid characters)
       run: |
-        tar -cvf ${{ github.workspace }}/repos.tar "$GITHUB_WORKSPACE"/repos/ /Users/runner/Library/Preferences/com.github.autopkg.plist
+        tar -cvf repos.tar "$GITHUB_WORKSPACE"/repos/ /Users/runner/Library/Preferences/com.github.autopkg.plist
+        echo NEW_REPO_CHECKSUM="$(shasum ${{ github.workspace }}/repos.tar | awk '{ print $1 }')" >> "$GITHUB_ENV"
+        echo Old repo: ${{ env.REPO_CHECKSUM }}
+        echo New repo: ${{ env.NEW_REPO_CHECKSUM }}
 
-#    - name: Upload Autopkg files as artifact
-#      uses: actions/upload-artifact@v3
-#      if: env.REPO_CHECKSUM != env.NEW_REPO_CHECKSUM
-#      with:
-#        name: autopkg-repo
-#        path: ${{ github.workspace }}/repos.tar
-#        retention-days: 14
+    - name: Upload Autopkg files as artifact
+      uses: actions/upload-artifact@v3
+      if: env.REPO_CHECKSUM != env.NEW_REPO_CHECKSUM
+      with:
+        name: autopkg-repo
+        path: ${{ github.workspace }}/repos.tar
+        retention-days: 14
 
     - name: Create Trust Info pull request
       if: env.TITLE
