@@ -20,42 +20,42 @@ jobs:
     - name: Checkout AutoPkg recipes (this repo)
       uses: actions/checkout@v3
 
-    - name: Cache Munki Pkg
-      uses: actions/cache@v3
-      id: munki-pkg-cache
-      with:
-        path: ${{ github.workspace }}/munkitools.pkg
-        key: ${{ runner.os }}-munki-pkg-${{ vars.MUNKI_EXPLICIT_VERSION }}
+#     - name: Cache Munki Pkg
+#       uses: actions/cache@v3
+#       id: munki-pkg-cache
+#       with:
+#         path: ${{ github.workspace }}/munkitools.pkg
+#         key: ${{ runner.os }}-munki-pkg-${{ vars.MUNKI_EXPLICIT_VERSION }}
 
-    - name: Cache Autopkg Pkg
-      uses: actions/cache@v3
-      id: autopkg-pkg-cache
-      with:
-        path: ${{ github.workspace }}/autopkg.pkg
-        key: ${{ runner.os }}-autopkg-pkg-${{ vars.AUTOPKG_VERSION }}
+#     - name: Cache Autopkg Pkg
+#       uses: actions/cache@v3
+#       id: autopkg-pkg-cache
+#       with:
+#         path: ${{ github.workspace }}/autopkg.pkg
+#         key: ${{ runner.os }}-autopkg-pkg-${{ vars.AUTOPKG_VERSION }}
 
-    - name: Download artifact
-      id: download-artifact
-      uses: dawidd6/action-download-artifact@v2
-      with:
-        check_artifacts: true
-        name: 'autopkg-repo'
-        path: ${{ github.workspace }}/
-        if_no_artifact_found: ignore
+#     - name: Download artifact
+#       id: download-artifact
+#       uses: dawidd6/action-download-artifact@v2
+#       with:
+#         check_artifacts: true
+#         name: 'autopkg-repo'
+#         path: ${{ github.workspace }}/
+#         if_no_artifact_found: ignore
 
-    - name: Decompress repo
-      if: steps.download-artifact.outputs.found_artifact == 'true'
-      run: |
-        echo REPO_CHECKSUM="$(shasum "$GITHUB_WORKSPACE"/repos.tar | awk '{ print $1 }')" >> "$GITHUB_ENV"
-        tar -xvf "$GITHUB_WORKSPACE"/repos.tar -C /
+#     - name: Decompress repo
+#       if: steps.download-artifact.outputs.found_artifact == 'true'
+#       run: |
+#         echo REPO_CHECKSUM="$(shasum "$GITHUB_WORKSPACE"/repos.tar | awk '{ print $1 }')" >> "$GITHUB_ENV"
+#         tar -xvf "$GITHUB_WORKSPACE"/repos.tar -C /
 
     - name: Download Munki
-      if: steps.munki-pkg-cache.outputs.cache-hit != 'true'
+#       if: steps.munki-pkg-cache.outputs.cache-hit != 'true'
       run: |
         curl -L https://github.com/munki/munki/releases/download/v${{ vars.MUNKI_VERSION }}/munkitools-${{ vars.MUNKI_EXPLICIT_VERSION }}.pkg --output ${{ github.workspace }}/munkitools.pkg
 
     - name: Download AutoPkg
-      if: steps.autopkg-pkg-cache.outputs.cache-hit != 'true'
+#       if: steps.autopkg-pkg-cache.outputs.cache-hit != 'true'
       run: |
         curl -L https://github.com/autopkg/autopkg/releases/download/v${{ vars.AUTOPKG_VERSION }}/autopkg-${{ vars.AUTOPKG_VERSION }}.pkg --output ${{ github.workspace }}/autopkg.pkg
 
@@ -74,7 +74,7 @@ jobs:
         path: munki_repo
 
     - name: Configure AutoPkg
-      if: steps.download-artifact.outputs.found_artifact != 'true'
+#       if: steps.download-artifact.outputs.found_artifact != 'true'
       run: |
         defaults write com.github.autopkg RECIPE_OVERRIDE_DIRS "$GITHUB_WORKSPACE"/overrides/
         defaults write com.github.autopkg RECIPE_REPO_DIR "$GITHUB_WORKSPACE"/repos/
@@ -85,13 +85,13 @@ jobs:
         git config --global user.email "runner@githubactions.local"
 
     - name: Configure AutoPkg Repos
-      if: steps.download-artifact.outputs.found_artifact != 'true'
+#       if: steps.download-artifact.outputs.found_artifact != 'true'
       run: |
         for repo in $(cat repo_list.txt); do autopkg repo-add "$repo"; done
 
-    - name: Update AutoPkg Repos
-      if: steps.download-artifact.outputs.found_artifact == 'true'
-      run: autopkg repo-update all
+#     - name: Update AutoPkg Repos
+#       if: steps.download-artifact.outputs.found_artifact == 'true'
+#       run: autopkg repo-update all
 
     - name: Run makecatalogs
       run: /usr/local/munki/makecatalogs munki_repo
@@ -110,21 +110,21 @@ jobs:
         RECIPE: ${{ inputs.recipe_override }}
         SLACK_WEBHOOK_TOKEN: ${{ secrets.autopkg_slack_token }}
 
-    - name: Compress repo (to get around possible invalid characters)
-      run: |
-        tar -cvf repos.tar "$GITHUB_WORKSPACE"/repos/ /Users/runner/Library/Preferences/com.github.autopkg.plist
-        echo NEW_REPO_CHECKSUM="$(shasum ${{ github.workspace }}/repos.tar | awk '{ print $1 }')" >> "$GITHUB_ENV"
-        echo Old repo: ${{ env.REPO_CHECKSUM }}
-        echo New repo: ${{ env.NEW_REPO_CHECKSUM }}
-        echo NEW_REPO_CHECKSUM="$(shasum ${{ github.workspace }}/repos.tar | awk '{ print $1 }')"
+#     - name: Compress repo (to get around possible invalid characters)
+#       run: |
+#         tar -cvf repos.tar "$GITHUB_WORKSPACE"/repos/ /Users/runner/Library/Preferences/com.github.autopkg.plist
+#         echo NEW_REPO_CHECKSUM="$(shasum ${{ github.workspace }}/repos.tar | awk '{ print $1 }')" >> "$GITHUB_ENV"
+#         echo Old repo: ${{ env.REPO_CHECKSUM }}
+#         echo New repo: ${{ env.NEW_REPO_CHECKSUM }}
+#         echo NEW_REPO_CHECKSUM="$(shasum ${{ github.workspace }}/repos.tar | awk '{ print $1 }')"
 
-    - name: Upload Autopkg files as artifact
-      uses: actions/upload-artifact@v3
-      if: env.REPO_CHECKSUM != env.NEW_REPO_CHECKSUM
-      with:
-        name: autopkg-repo
-        path: ${{ github.workspace }}/repos.tar
-        retention-days: 14
+#     - name: Upload Autopkg files as artifact
+#       uses: actions/upload-artifact@v3
+#       if: env.REPO_CHECKSUM != env.NEW_REPO_CHECKSUM
+#       with:
+#         name: autopkg-repo
+#         path: ${{ github.workspace }}/repos.tar
+#         retention-days: 14
 
     - name: Create Trust Info pull request
       if: env.TITLE
