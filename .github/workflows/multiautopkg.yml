@@ -15,4 +15,3 @@ jobs:
     uses: joncrain/autopkg-ci/actions/reusable_autopkg.yml@main
     with:
       recipe_override: ${{ matrix.target }}
-~
