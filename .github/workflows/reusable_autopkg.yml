@@ -1,4 +1,4 @@
-name: AutoPkg run
+name: Reusable AutoPkg
 
 on:
   workflow_call:
