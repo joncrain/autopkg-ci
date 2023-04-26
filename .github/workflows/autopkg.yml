@@ -41,6 +41,7 @@ jobs:
     - name: Decompress repo
       if: steps.download-artifact.outputs.found_artifact == 'true'
       run: |
+        echo REPO_CHECKSUM="$(shasum "$GITHUB_WORKSPACE"/output/repos.tar | awk '{ print $1 }')" >> "$GITHUB_ENV"
         tar -xvf "$GITHUB_WORKSPACE"/output/repos.tar -C /
 
     - name: Download Munki
@@ -105,13 +106,17 @@ jobs:
         SLACK_WEBHOOK_TOKEN: ${{ secrets.autopkg_slack_token }}
 
     - name: Compress repo (to get around possible invalid characters)
-      run: tar -cvf repos.tar "$GITHUB_WORKSPACE"/repos/ /Users/runner/Library/Preferences/com.github.autopkg.plist
+      run: |
+        tar -cvf repos.tar "$GITHUB_WORKSPACE"/repos/ /Users/runner/Library/Preferences/com.github.autopkg.plist
+        echo NEW_REPO_CHECKSUM="$(shasum repos.tar | awk '{ print $1 }')" >> "$GITHUB_ENV"
 
     - name: Upload Autopkg files as artifact
       uses: actions/upload-artifact@v3
+      if: env.REPO_CHECKSUM != env.NEW_REPO_CHECKSUM
       with:
         name: autopkg-repo
         path: ${{ github.workspace }}/repos.tar
+        retention-days: 14
 
     - name: Create Trust Info pull request
       if: env.TITLE
