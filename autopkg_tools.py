@@ -196,7 +196,8 @@ def checkout(branch, new=True):
     # Lazy branch exists check
     try:
         git_run(gitcmd)
-        os.chdir(branch)
+        if branch != "main":
+            os.chdir(branch)
     except subprocess.CalledProcessError as e:
         if new:
             checkout(branch, new=False)
