@@ -188,7 +188,7 @@ def checkout(branch, new=True):
     if current_branch() != "main" and branch != "main":
         checkout("main", new=False)
 
-    gitcmd = ["worktree", "add", branch]
+    gitcmd = ["checkout"]
     if new:
         gitcmd += ["-b"]
 
@@ -196,8 +196,6 @@ def checkout(branch, new=True):
     # Lazy branch exists check
     try:
         git_run(gitcmd)
-        if branch != "main":
-            os.chdir(branch)
     except subprocess.CalledProcessError as e:
         if new:
             checkout(branch, new=False)
@@ -205,10 +203,20 @@ def checkout(branch, new=True):
             raise e
 
 
+def checkout_worktree(branch):
+    gitcmd = ["worktree", "add", branch, "-b", branch]
+    try:
+        git_run(gitcmd)
+        os.chdir(branch)
+    except subprocess.CalledProcessError as e:
+        raise e
+
+
 def cleanup_worktree(branch):
     os.chdir("..")
     git_run(["worktree", "remove", branch])
     return
+
 
 ### Recipe handling
 def handle_recipe(recipe, opts, failures):
@@ -220,7 +228,7 @@ def handle_recipe(recipe, opts, failures):
         recipe.run()
         if recipe.results["imported"]:
             print("Imported")
-            checkout(recipe.branch)
+            checkout_worktree(recipe.branch)
             for imported in recipe.results["imported"]:
                 print("Adding files")
                 # git_run(["add", f"'pkgs/{ imported['pkg_repo_path'] }'"])
@@ -393,7 +401,13 @@ def main():
     failures = []
 
     recipes = (
-        RECIPE_TO_RUN.split(", ") if RECIPE_TO_RUN else [opts.recipe] if opts.recipe else opts.list if opts.list else None
+        RECIPE_TO_RUN.split(", ")
+        if RECIPE_TO_RUN
+        else [opts.recipe]
+        if opts.recipe
+        else opts.list
+        if opts.list
+        else None
     )
     print(recipes)
     if recipes is None:
