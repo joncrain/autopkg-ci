@@ -65,7 +65,7 @@ jobs:
     - name: Run AutoPkg
       run: |
         pip3 install requests
-        python3 autopkg_tools.py -l recipe_list.json
+        python3 autopkg_tools_old.py -l recipe_list.json
         if [ -f pull_request_title ]; then
         echo "TITLE=$(cat pull_request_title)" >> $GITHUB_ENV
         echo "BODY<<EOF" >> $GITHUB_ENV
