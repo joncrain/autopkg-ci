@@ -205,6 +205,9 @@ def checkout(branch, new=True):
 
 def checkout_worktree(branch):
     git_run(["worktree", "add", branch, "-b", branch])
+    # list directory contents
+    print("Directory contents:")
+    print(os.listdir('./'))
     os.chdir(branch)
 
 
