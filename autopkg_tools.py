@@ -21,6 +21,7 @@ import json
 import plistlib
 import requests
 import subprocess
+import threading
 from pathlib import Path
 from optparse import OptionParser
 from datetime import datetime
@@ -187,10 +188,10 @@ def checkout(branch, new=True):
         checkout("main", new=False)
 
     gitcmd = ["worktree", "add", branch]
-    if new:
-        gitcmd += ["-b"]
+    # if new:
+    #     gitcmd += ["-b"]
 
-    gitcmd.append(branch)
+    # gitcmd.append(branch)
     # Lazy branch exists check
     try:
         git_run(gitcmd)
@@ -202,7 +203,7 @@ def checkout(branch, new=True):
 
 
 ### Recipe handling
-def handle_recipe(recipe, opts):
+def handle_recipe(recipe, opts, failures):
     if not opts.disable_verification:
         recipe.verify_trust_info()
         if recipe.verified is False:
@@ -214,8 +215,8 @@ def handle_recipe(recipe, opts):
             checkout(recipe.branch)
             for imported in recipe.results["imported"]:
                 print("Adding files")
-                git_run(["add", f"'pkgs/{ imported['pkg_repo_path'] }'"])
-                git_run(["add", f"'pkgsinfo/{ imported['pkginfo_path'] }'"])
+                # git_run(["add", f"'pkgs/{ imported['pkg_repo_path'] }'"])
+                git_run(["worktree" "add", f"'pkgsinfo/{ imported['pkginfo_path'] }'"])
             print("Committing changes")
             git_run(
                 [
@@ -226,7 +227,11 @@ def handle_recipe(recipe, opts):
             )
             print("Pushing changes")
             git_run(["push", "--set-upstream", "origin", recipe.branch])
-    return recipe
+    slack_alert(recipe, opts)
+    if not opts.disable_verification:
+        if not recipe.verified:
+            failures.append(recipe)
+    return recipe, failures
 
 
 def parse_recipes(recipes, opts):
@@ -381,12 +386,19 @@ def main():
         print("Recipe --list or RECIPE_TO_RUN not provided!")
         sys.exit(1)
     recipes = parse_recipes(recipes, opts)
+
+    threads = []
+
     for recipe in recipes:
-        handle_recipe(recipe, opts)
-        slack_alert(recipe, opts)
-        if not opts.disable_verification:
-            if not recipe.verified:
-                failures.append(recipe)
+        thread = threading.Thread(target=handle_recipe(recipe, opts, failures))
+        threads.append(thread)
+
+    for thread in threads:
+        thread.start()
+
+    for thread in threads:
+        thread.join()
+
     if not opts.disable_verification:
         if failures:
             title = " ".join([f"{recipe.name}" for recipe in failures])

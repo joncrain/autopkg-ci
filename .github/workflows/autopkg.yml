@@ -65,17 +65,13 @@ jobs:
     - name: Run AutoPkg
       run: |
         pip3 install requests
-        while read p; do
-          python3 autopkg_tools.py -r "$p" &
-          # if [ -f pull_request_title ]; then
-          # echo "TITLE=$(cat pull_request_title)" >> $GITHUB_ENV
-          # echo "BODY<<EOF" >> $GITHUB_ENV
-          # cat pull_request_body >> $GITHUB_ENV
-          # echo "EOF" >> $GITHUB_ENV
-          # fi
-        done < recipe_list.txt
-        sleep 360
-        echo "Recipes have finished."
+        python3 autopkg_tools.py -l recipe_list.json
+        if [ -f pull_request_title ]; then
+        echo "TITLE=$(cat pull_request_title)" >> $GITHUB_ENV
+        echo "BODY<<EOF" >> $GITHUB_ENV
+        cat pull_request_body >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
+        fi
       env:
         RECIPE: ${{ github.event.inputs.recipe }}
         SLACK_WEBHOOK_TOKEN: ${{ secrets.autopkg_slack_token }}
