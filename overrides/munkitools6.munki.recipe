@@ -68,11 +68,11 @@
 			<key>com.github.autopkg.munki.munkitools6</key>
 			<dict>
 				<key>git_hash</key>
-				<string>062afaad6d217d35368e4ecdebb0dbf644624dcb</string>
+				<string>e0efc431794a819abbca361ad48cfa7445913479</string>
 				<key>path</key>
-				<string>~/Library/AutoPkg/RecipeRepos/com.github.autopkg.recipes/munkitools/munkitools6.munki.recipe</string>
+				<string>~/work/autopkg-ci/autopkg-ci/repos/com.github.autopkg.recipes/munkitools/munkitools6.munki.recipe</string>
 				<key>sha256_hash</key>
-				<string>81165651988bae0751a9e3c94cb9bfb5b9aec57d03ceff359c85c876ef873f12</string>
+				<string>4c5687678d3dd660f84619c20e6c24975c0ab4f81df4bd63ff12276b208f46ca</string>
 			</dict>
 		</dict>
 	</dict>
