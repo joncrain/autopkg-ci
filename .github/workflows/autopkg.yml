@@ -10,7 +10,7 @@ on:
 jobs:
   AutoPkg:
     runs-on: macos-latest
-    timeout-minutes: 15 # Keeps your builds from running too long
+    timeout-minutes: 150 # Keeps your builds from running too long
     steps:
     - name: Checkout AutoPkg recipes (this repo)
       uses: actions/checkout@v3
