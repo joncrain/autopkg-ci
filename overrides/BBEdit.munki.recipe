@@ -61,27 +61,33 @@ current_user=$(/usr/local/munki/munki-python -c 'from SystemConfiguration import
 		<dict>
 			<key>BarebonesURLProvider</key>
 			<dict>
+				<key>git_hash</key>
+				<string>a28e56e90ebc52512a4b7ec8fe1981bf02e92bc5</string>
 				<key>path</key>
-				<string>~/Library/AutoPkg/Recipes/BBEdit/BarebonesURLProvider.py</string>
+				<string>~/work/autopkg-ci/autopkg-ci/repos/com.github.autopkg.recipes/Barebones/BarebonesURLProvider.py</string>
 				<key>sha256_hash</key>
-				<string>bff0787b1269d7dec3518292d4899c3313d5838a315c61b26572a46f9ccee89e</string>
+				<string>18f939879423d19946fe0f17b3fedba75e4312c0f8026f17629daac54b028d6d</string>
 			</dict>
 		</dict>
 		<key>parent_recipes</key>
 		<dict>
 			<key>com.github.autopkg.download.bbedit</key>
 			<dict>
+				<key>git_hash</key>
+				<string>55e47128864841e568cf20ccd2b852fea48faa50</string>
 				<key>path</key>
-				<string>~/Library/AutoPkg/Recipes/BBEdit/BBEdit.download.recipe</string>
+				<string>~/work/autopkg-ci/autopkg-ci/repos/com.github.autopkg.recipes/Barebones/BBEdit.download.recipe</string>
 				<key>sha256_hash</key>
-				<string>70cd1316806ea186b5cfdcb48acba94a239d2241b0ae9a28e48c0d7efb197155</string>
+				<string>6d8e8c3699f23f9c0511f6e2d6a14c7400b890a729f688014adb287d3666eb03</string>
 			</dict>
 			<key>com.github.autopkg.munki.bbedit</key>
 			<dict>
+				<key>git_hash</key>
+				<string>01a422ed45f994dd21208137c3ca8d3d00588f03</string>
 				<key>path</key>
-				<string>~/Library/AutoPkg/Recipes/BBEdit/BBEdit.munki.recipe</string>
+				<string>~/work/autopkg-ci/autopkg-ci/repos/com.github.autopkg.recipes/Barebones/BBEdit.munki.recipe</string>
 				<key>sha256_hash</key>
-				<string>3eefbca401ea33038ceb4d370fb2aaabfe03ebdd90dbe399a9e6359b03cbaafa</string>
+				<string>f5972131331a6ea5200ca41d66c24b67b91b2925f98c4a6c354bc51006fc1249</string>
 			</dict>
 		</dict>
 	</dict>
