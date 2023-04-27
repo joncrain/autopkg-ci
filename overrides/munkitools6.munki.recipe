@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Identifier</key>
+	<string>local.munki.munkitools6</string>
+	<key>Input</key>
+	<dict>
+		<key>INCLUDE_PRERELEASES</key>
+		<string></string>
+		<key>MUNKITOOLS_ADMIN_DESCRIPTION</key>
+		<string>Command-line Managed Software Center admin tools.</string>
+		<key>MUNKITOOLS_ADMIN_DISPLAYNAME</key>
+		<string>Managed Software Center admin tools</string>
+		<key>MUNKITOOLS_ADMIN_NAME</key>
+		<string>munkitools_admin</string>
+		<key>MUNKITOOLS_APP_DESCRIPTION</key>
+		<string>Managed Software Center application.</string>
+		<key>MUNKITOOLS_APP_DISPLAYNAME</key>
+		<string>Managed Software Center</string>
+		<key>MUNKITOOLS_APP_NAME</key>
+		<string>munkitools</string>
+		<key>MUNKITOOLS_APP_USAGE_DESCRIPTION</key>
+		<string>Application usage statistics for Managed Software Center.</string>
+		<key>MUNKITOOLS_APP_USAGE_DISPLAYNAME</key>
+		<string>Managed Software Center app usage</string>
+		<key>MUNKITOOLS_APP_USAGE_NAME</key>
+		<string>munkitools_app_usage</string>
+		<key>MUNKITOOLS_CORE_DESCRIPTION</key>
+		<string>Core command-line tools used by Managed Software Center.</string>
+		<key>MUNKITOOLS_CORE_DISPLAYNAME</key>
+		<string>Managed Software Center core tools</string>
+		<key>MUNKITOOLS_CORE_NAME</key>
+		<string>munkitools_core</string>
+		<key>MUNKITOOLS_LAUNCHD_DESCRIPTION</key>
+		<string>launchd configuration files for use by Managed Software Center.</string>
+		<key>MUNKITOOLS_LAUNCHD_DISPLAYNAME</key>
+		<string>Managed Software Center launchd files</string>
+		<key>MUNKITOOLS_LAUNCHD_NAME</key>
+		<string>munkitools_launchd</string>
+		<key>MUNKITOOLS_PYTHON_DESCRIPTION</key>
+		<string>Embedded Python tools used by Managed Software Center.</string>
+		<key>MUNKITOOLS_PYTHON_DISPLAYNAME</key>
+		<string>Managed Software Center embedded python</string>
+		<key>MUNKITOOLS_PYTHON_NAME</key>
+		<string>munkitools_python</string>
+		<key>MUNKI_CATALOG</key>
+		<string>test</string>
+		<key>MUNKI_CATEGORY</key>
+		<string>System</string>
+		<key>MUNKI_DEVELOPER</key>
+		<string>The Munki Project</string>
+		<key>MUNKI_ICON</key>
+		<string>munkitools.png</string>
+		<key>MUNKI_REPO_SUBDIR</key>
+		<string></string>
+		<key>NAME</key>
+		<string>munkitools6</string>
+	</dict>
+	<key>ParentRecipe</key>
+	<string>com.github.autopkg.munki.munkitools6</string>
+	<key>ParentRecipeTrustInfo</key>
+	<dict>
+		<key>non_core_processors</key>
+		<dict/>
+		<key>parent_recipes</key>
+		<dict>
+			<key>com.github.autopkg.munki.munkitools6</key>
+			<dict>
+				<key>git_hash</key>
+				<string>062afaad6d217d35368e4ecdebb0dbf644624dcb</string>
+				<key>path</key>
+				<string>~/Library/AutoPkg/RecipeRepos/com.github.autopkg.recipes/munkitools/munkitools6.munki.recipe</string>
+				<key>sha256_hash</key>
+				<string>81165651988bae0751a9e3c94cb9bfb5b9aec57d03ceff359c85c876ef873f12</string>
+			</dict>
+		</dict>
+	</dict>
+</dict>
+</plist>

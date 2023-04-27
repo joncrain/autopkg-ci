@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Identifier</key>
+	<string>local.munki.BBEdit</string>
+	<key>Input</key>
+	<dict>
+		<key>MUNKI_REPO_SUBDIR</key>
+		<string></string>
+		<key>NAME</key>
+		<string>BBEdit</string>
+		<key>pkginfo</key>
+		<dict>
+			<key>catalogs</key>
+			<array>
+				<string>test</string>
+			</array>
+			<key>category</key>
+			<string>Text Editors</string>
+			<key>description</key>
+			<string>BBEdit is the leading professional HTML and text editor for the Mac. Specifically crafted in response to the needs of Web authors and software developers, this award-winning product provides a plethora of features for editing, searching, and manipulation of text. BBEdit transforms text with high performance.</string>
+			<key>developer</key>
+			<string>Bare Bones Software</string>
+			<key>display_name</key>
+			<string>BBEdit</string>
+			<key>name</key>
+			<string>%NAME%</string>
+			<key>postinstall_script</key>
+			<string>#!/bin/sh
+# Copy command-line tool resources out of .app bundle
+CMD_TOOL_DIR=/usr/local/bin
+CMD_MAN_DIR=/usr/local/share/man/man1
+HELPER_BIN_SRC_DIR=/Applications/BBEdit.app/Contents/Helpers
+HELPER_MAN_SRC_DIR=/Applications/BBEdit.app/Contents/Resources
+LN=/bin/ln
+
+# create dirs if they don't already exist
+for DIR in "$CMD_TOOL_DIR" "$CMD_MAN_DIR"; do
+	[ -d "$DIR" ] || mkdir -p -m 775 "$DIR"
+done
+# make symlinks to binaries and manpages
+for TOOL in bbdiff bbfind bbresults; do
+	"$LN" -sf "$HELPER_BIN_SRC_DIR/$TOOL" "$CMD_TOOL_DIR/$TOOL"
+	"$LN" -sf "$HELPER_MAN_SRC_DIR/$TOOL.1" "$CMD_MAN_DIR/$TOOL.1"
+done
+"$LN" -sf "$HELPER_BIN_SRC_DIR/bbedit_tool" "$CMD_TOOL_DIR/bbedit"
+"$LN" -sf "$HELPER_MAN_SRC_DIR/bbedit.1" "$CMD_MAN_DIR/bbedit.1"
+current_user=$(/usr/local/munki/munki-python -c 'from SystemConfiguration import SCDynamicStoreCopyConsoleUser; import sys; username = (SCDynamicStoreCopyConsoleUser(None, None, None) or [None])[0]; username = [username,""][username in [u"loginwindow", None, u""]]; sys.stdout.write(username + "\n");')
+/usr/sbin/chown -R $current_user:admin "/Applications/BBEdit.app"
+			</string>
+			<key>unattended_install</key>
+			<true/>
+		</dict>
+	</dict>
+	<key>ParentRecipe</key>
+	<string>com.github.autopkg.munki.bbedit</string>
+	<key>ParentRecipeTrustInfo</key>
+	<dict>
+		<key>non_core_processors</key>
+		<dict>
+			<key>BarebonesURLProvider</key>
+			<dict>
+				<key>path</key>
+				<string>~/Library/AutoPkg/Recipes/BBEdit/BarebonesURLProvider.py</string>
+				<key>sha256_hash</key>
+				<string>bff0787b1269d7dec3518292d4899c3313d5838a315c61b26572a46f9ccee89e</string>
+			</dict>
+		</dict>
+		<key>parent_recipes</key>
+		<dict>
+			<key>com.github.autopkg.download.bbedit</key>
+			<dict>
+				<key>path</key>
+				<string>~/Library/AutoPkg/Recipes/BBEdit/BBEdit.download.recipe</string>
+				<key>sha256_hash</key>
+				<string>70cd1316806ea186b5cfdcb48acba94a239d2241b0ae9a28e48c0d7efb197155</string>
+			</dict>
+			<key>com.github.autopkg.munki.bbedit</key>
+			<dict>
+				<key>path</key>
+				<string>~/Library/AutoPkg/Recipes/BBEdit/BBEdit.munki.recipe</string>
+				<key>sha256_hash</key>
+				<string>3eefbca401ea33038ceb4d370fb2aaabfe03ebdd90dbe399a9e6359b03cbaafa</string>
+			</dict>
+		</dict>
+	</dict>
+</dict>
+</plist>
