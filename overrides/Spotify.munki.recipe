@@ -20,13 +20,13 @@
 			<array>
 				<string>test</string>
 			</array>
-			<key>description</key>
-			<string>Spotify is a music streaming service offering unlimited streaming of selected music from a range of major and independent record labels.</string>
 			<key>category</key>
 			<string>Entertainment</string>
-			<key>display_name</key>
-			<string>Spotify</string>
+			<key>description</key>
+			<string>Spotify is a music streaming service offering unlimited streaming of selected music from a range of major and independent record labels.</string>
 			<key>developer</key>
+			<string>Spotify</string>
+			<key>display_name</key>
 			<string>Spotify</string>
 			<key>name</key>
 			<string>%NAME%</string>

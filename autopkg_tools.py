@@ -205,14 +205,12 @@ def checkout(branch, new=True):
 
 def checkout_worktree(branch):
     git_run(["worktree", "add", branch, "-b", branch])
-    # list directory contents
-    print("Directory contents:")
-    print(os.listdir('./'))
-    os.chdir(branch)
+    os.chdir(os.path.join(MUNKI_REPO, branch))
+
 
 
 def cleanup_worktree(branch):
-    os.chdir("..")
+    os.chdir(MUNKI_REPO)
     git_run(["worktree", "remove", branch])
     return
 
@@ -232,10 +230,10 @@ def handle_recipe(recipe, opts, failures):
             for imported in recipe.results["imported"]:
                 print("Adding files")
                 # git_run(["add", f"'pkgs/{ imported['pkg_repo_path'] }'"])
-                os.remove(f"pkgs/{ imported['pkg_repo_path'] }")
+                os.remove(f"../pkgs/{ imported['pkg_repo_path'] }")
                 shutil.move(
+                    f"../pkgsinfo/{ imported['pkginfo_path'] }",
                     f"pkgsinfo/{ imported['pkginfo_path'] }",
-                    f"../{ recipe.branch }/pkgsinfo/{ imported['pkginfo_path'] }",
                 )
                 git_run(["add", f"'pkgsinfo/{ imported['pkginfo_path'] }'"])
             print("Committing changes")
