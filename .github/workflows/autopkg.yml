@@ -74,7 +74,7 @@ jobs:
           # echo "EOF" >> $GITHUB_ENV
           # fi
         done < recipe_list.txt
-        wait
+        sleep 360
         echo "Recipes have finished."
       env:
         RECIPE: ${{ github.event.inputs.recipe }}

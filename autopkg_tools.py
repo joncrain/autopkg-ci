@@ -186,7 +186,7 @@ def checkout(branch, new=True):
     if current_branch() != "main" and branch != "main":
         checkout("main", new=False)
 
-    gitcmd = ["checkout"]
+    gitcmd = ["worktree", "add", branch]
     if new:
         gitcmd += ["-b"]
 
