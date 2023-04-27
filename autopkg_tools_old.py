@@ -54,7 +54,7 @@ class Recipe(object):
     @property
     def branch(self):
         return (
-            "{}_{}".format(self.name, self.updated_version)
+            "old-{}_{}".format(self.name, self.updated_version)
             .strip()
             .replace(" ", "")
             .replace(")", "-")
