@@ -211,6 +211,7 @@ def checkout_worktree(branch):
 
 def cleanup_worktree(branch):
     os.chdir(MUNKI_REPO)
+    os.chdir("..")
     git_run(["worktree", "remove", branch])
     return
 
