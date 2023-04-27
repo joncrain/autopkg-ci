@@ -20,6 +20,7 @@ import sys
 import json
 import plistlib
 import requests
+import shutil
 import subprocess
 import threading
 from pathlib import Path
@@ -188,19 +189,25 @@ def checkout(branch, new=True):
         checkout("main", new=False)
 
     gitcmd = ["worktree", "add", branch]
-    # if new:
-    #     gitcmd += ["-b"]
+    if new:
+        gitcmd += ["-b"]
 
-    # gitcmd.append(branch)
+    gitcmd.append(branch)
     # Lazy branch exists check
     try:
         git_run(gitcmd)
+        os.chdir(branch)
     except subprocess.CalledProcessError as e:
         if new:
             checkout(branch, new=False)
         else:
             raise e
 
+
+def cleanup_worktree(branch):
+    os.chdir("..")
+    git_run(["worktree", "remove", branch])
+    return
 
 ### Recipe handling
 def handle_recipe(recipe, opts, failures):
@@ -216,7 +223,12 @@ def handle_recipe(recipe, opts, failures):
             for imported in recipe.results["imported"]:
                 print("Adding files")
                 # git_run(["add", f"'pkgs/{ imported['pkg_repo_path'] }'"])
-                git_run(["worktree" "add", f"'pkgsinfo/{ imported['pkginfo_path'] }'"])
+                os.remove(f"pkgs/{ imported['pkg_repo_path'] }")
+                shutil.move(
+                    f"pkgsinfo/{ imported['pkginfo_path'] }",
+                    f"../{ recipe.branch }/pkgsinfo/{ imported['pkginfo_path'] }",
+                )
+                git_run(["add", f"'pkgsinfo/{ imported['pkginfo_path'] }'"])
             print("Committing changes")
             git_run(
                 [
@@ -227,6 +239,7 @@ def handle_recipe(recipe, opts, failures):
             )
             print("Pushing changes")
             git_run(["push", "--set-upstream", "origin", recipe.branch])
+            cleanup_worktree(recipe.branch)
     slack_alert(recipe, opts)
     if not opts.disable_verification:
         if not recipe.verified:
