@@ -204,12 +204,8 @@ def checkout(branch, new=True):
 
 
 def checkout_worktree(branch):
-    gitcmd = ["worktree", "add", branch, "-b", branch]
-    try:
-        git_run(gitcmd)
-        os.chdir(branch)
-    except subprocess.CalledProcessError as e:
-        raise e
+    git_run(["worktree", "add", branch, "-b", branch])
+    os.chdir(branch)
 
 
 def cleanup_worktree(branch):
@@ -220,6 +216,7 @@ def cleanup_worktree(branch):
 
 ### Recipe handling
 def handle_recipe(recipe, opts, failures):
+    print("Handling " + recipe.name)
     if not opts.disable_verification:
         recipe.verify_trust_info()
         if recipe.verified is False:
