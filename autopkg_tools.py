@@ -171,7 +171,12 @@ def git_run(cmd, BRANCH=""):
         print("Running " + " ".join(cmd))
         hide_cmd_output = False
     try:
-        result = subprocess.run(" ".join(cmd), shell=True, cwd=os.path.join(MUNKI_REPO, BRANCH))
+        result = subprocess.run(
+            " ".join(cmd),
+            shell=True,
+            cwd=os.path.join(MUNKI_REPO, BRANCH),
+            capture_output=hide_cmd_output,
+        )
         print(result)
     except subprocess.CalledProcessError as e:
         print(e.stderr)
@@ -205,6 +210,7 @@ def checkout_worktree(branch):
     git_run(["worktree", "add", branch, "-b", branch])
     return
 
+
 def cleanup_worktree(branch):
     git_run(["worktree", "remove", branch, "-f"])
     return
@@ -226,18 +232,21 @@ def handle_recipe(recipe, opts, failures):
                 print("Adding files")
                 # TODO: Create flag for commiting pkg
                 # git_run(["add", f"'pkgs/{ imported['pkg_repo_path'] }'"])
-                shutil.move(
-                    f"{MUNKI_REPO}/pkgsinfo/{ imported['pkginfo_path'] }",
-                    f"{MUNKI_REPO}/{recipe.branch}/pkgsinfo/{ imported['pkginfo_path'] }",
+                recipe_path = f"{MUNKI_REPO}/pkgsinfo/{ imported['pkginfo_path'] }"
+                new_recipe_path = f"{MUNKI_REPO}/{recipe.branch}/pkgsinfo/{ imported['pkginfo_path'] }"
+                print(f"Moving pkginfo from {recipe_path} to {new_recipe_path}")
+                shutil.move(recipe_path, new_recipe_path)
+                git_run(
+                    ["add", f"'pkgsinfo/{ imported['pkginfo_path'] }'"], recipe.branch
                 )
-                git_run(["add", f"'pkgsinfo/{ imported['pkginfo_path'] }'"], recipe.branch)
             print("Committing changes")
             git_run(
                 [
                     "commit",
                     "-m",
                     f"'Updated { recipe.name } to { recipe.updated_version }'",
-                ]
+                ],
+                recipe.branch,
             )
             print("Pushing changes")
             git_run(["push", "--set-upstream", "origin", recipe.branch], recipe.branch)
