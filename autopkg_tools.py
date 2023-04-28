@@ -227,8 +227,8 @@ def handle_recipe(recipe, opts, failures):
                 # TODO: Create flag for commiting pkg
                 # git_run(["add", f"'pkgs/{ imported['pkg_repo_path'] }'"])
                 shutil.move(
-                    f"../pkgsinfo/{ imported['pkginfo_path'] }",
-                    f"pkgsinfo/{ imported['pkginfo_path'] }",
+                    f"{MUNKI_REPO}/pkgsinfo/{ imported['pkginfo_path'] }",
+                    f"{MUNKI_REPO}/{recipe.branch}/pkgsinfo/{ imported['pkginfo_path'] }",
                 )
                 git_run(["add", f"'pkgsinfo/{ imported['pkginfo_path'] }'"], recipe.branch)
             print("Committing changes")
