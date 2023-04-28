@@ -163,16 +163,15 @@ class Recipe(object):
 
 
 ### GIT FUNCTIONS
-def git_run(cmd):
+def git_run(cmd, BRANCH=""):
     cmd = ["git"] + cmd
     hide_cmd_output = True
 
     if DEBUG:
         print("Running " + " ".join(cmd))
         hide_cmd_output = False
-
     try:
-        result = subprocess.run(" ".join(cmd), shell=True, cwd=MUNKI_REPO)
+        result = subprocess.run(" ".join(cmd), shell=True, cwd=os.path.join(MUNKI_REPO, BRANCH))
         print(result)
     except subprocess.CalledProcessError as e:
         print(e.stderr)
@@ -204,17 +203,9 @@ def checkout(branch, new=True):
 
 def checkout_worktree(branch):
     git_run(["worktree", "add", branch, "-b", branch])
-    print(f"Changing directory to worktree {branch}")
-    # Setup git config
-    git_run(["config", "user.name", "GitHub Actions"])
-    git_run(["config", "user.email", "runner@githubactions.local"])
-    os.chdir(os.path.join(MUNKI_REPO, branch))
-
-
+    return
 
 def cleanup_worktree(branch):
-    os.chdir(MUNKI_REPO)
-    os.chdir("..")
     git_run(["worktree", "remove", branch, "-f"])
     return
 
@@ -239,7 +230,7 @@ def handle_recipe(recipe, opts, failures):
                     f"../pkgsinfo/{ imported['pkginfo_path'] }",
                     f"pkgsinfo/{ imported['pkginfo_path'] }",
                 )
-                git_run(["add", f"'pkgsinfo/{ imported['pkginfo_path'] }'"])
+                git_run(["add", f"'pkgsinfo/{ imported['pkginfo_path'] }'"], recipe.branch)
             print("Committing changes")
             git_run(
                 [
@@ -249,9 +240,9 @@ def handle_recipe(recipe, opts, failures):
                 ]
             )
             print("Pushing changes")
-            git_run(["push", "--set-upstream", "origin", recipe.branch])
+            git_run(["push", "--set-upstream", "origin", recipe.branch], recipe.branch)
             cleanup_worktree(recipe.branch)
-    slack_alert(recipe, opts)
+    # slack_alert(recipe, opts)
     if not opts.disable_verification:
         if not recipe.verified:
             failures.append(recipe)
@@ -294,70 +285,6 @@ def import_icons():
     git_run(["add", "icons/"])
     git_run(["commit", "-m", "Added new icons"])
     git_run(["push", "--set-upstream", "origin", f"{branch_name}"])
-
-
-def slack_alert(recipe, opts):
-    if opts.debug:
-        print("Debug: skipping Slack notification - debug is enabled!")
-        return
-    if not SLACK_WEBHOOK:
-        print("Skipping slack notification - webhook is missing!")
-        return
-
-    if not recipe.verified:
-        task_title = f"{ recipe.name } failed trust verification"
-        task_description = recipe.results["message"]
-    elif recipe.error:
-        task_title = f"Failed to import { recipe.name }"
-        if not recipe.results["failed"]:
-            task_description = "Unknown error"
-        else:
-            task_description = ("Error: {} \n" "Traceback: {} \n").format(
-                recipe.results["failed"][0]["message"],
-                recipe.results["failed"][0]["traceback"],
-            )
-
-            if "No releases found for repo" in task_description:
-                # Just no updates
-                return
-    elif recipe.updated:
-        task_title = "Imported %s %s" % (recipe.name, str(recipe.updated_version))
-        task_description = (
-            "*Catalogs:* %s \n" % recipe.results["imported"][0]["catalogs"]
-            + "*Package Path:* `%s` \n" % recipe.results["imported"][0]["pkg_repo_path"]
-            + "*Pkginfo Path:* `%s` \n" % recipe.results["imported"][0]["pkginfo_path"]
-        )
-    else:
-        # Also no updates
-        return
-
-    response = requests.post(
-        SLACK_WEBHOOK,
-        data=json.dumps(
-            {
-                "attachments": [
-                    {
-                        "username": "Autopkg",
-                        "as_user": True,
-                        "title": task_title,
-                        "color": "warning"
-                        if not recipe.verified
-                        else "good"
-                        if not recipe.error
-                        else "danger",
-                        "text": task_description,
-                        "mrkdwn_in": ["text"],
-                    }
-                ]
-            }
-        ),
-        headers={"Content-Type": "application/json"},
-    )
-    if response.status_code != 200:
-        raise ValueError(
-            "Request to slack returned an error %s, the response is:\n%s"
-            % (response.status_code, response.text)
-        )
 
 
 def main():
@@ -416,18 +343,18 @@ def main():
         print("Recipe --list or RECIPE_TO_RUN not provided!")
         sys.exit(1)
     recipes = parse_recipes(recipes, opts)
-
     threads = []
 
     for recipe in recipes:
-        thread = threading.Thread(target=handle_recipe(recipe, opts, failures))
-        threads.append(thread)
+        handle_recipe(recipe, opts, failures)
+    #     thread = threading.Thread(target=handle_recipe(recipe, opts, failures))
+    #     threads.append(thread)
 
-    for thread in threads:
-        thread.start()
+    # for thread in threads:
+    #     thread.start()
 
-    for thread in threads:
-        thread.join()
+    # for thread in threads:
+    #     thread.join()
 
     if not opts.disable_verification:
         if failures:
