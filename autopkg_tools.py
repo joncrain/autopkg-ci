@@ -134,7 +134,6 @@ class Recipe(object):
             if not os.path.isfile(report):
                 # Letting autopkg create them has led to errors on github runners
                 Path(report).touch()
-
             try:
                 cmd = [
                     "/usr/local/bin/autopkg",
@@ -230,8 +229,8 @@ def handle_recipe(recipe, opts, failures):
             checkout_worktree(recipe.branch)
             for imported in recipe.results["imported"]:
                 print("Adding files")
+                # TODO: Create flag for commiting pkg
                 # git_run(["add", f"'pkgs/{ imported['pkg_repo_path'] }'"])
-                os.remove(f"../pkgs/{ imported['pkg_repo_path'] }")
                 shutil.move(
                     f"../pkgsinfo/{ imported['pkginfo_path'] }",
                     f"pkgsinfo/{ imported['pkginfo_path'] }",
@@ -252,7 +251,7 @@ def handle_recipe(recipe, opts, failures):
     if not opts.disable_verification:
         if not recipe.verified:
             failures.append(recipe)
-    return recipe, failures
+    return failures
 
 
 def parse_recipes(recipes, opts):
