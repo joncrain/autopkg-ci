@@ -60,7 +60,7 @@ jobs:
       run: autopkg repo-update all
 
     - name: Run makecatalogs
-      run: /usr/local/munki/makecatalogs munki_repo
+      run: /usr/local/munki/makecatalogs munki_repo -s
 
     - name: Run AutoPkg
       run: |

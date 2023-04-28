@@ -204,6 +204,10 @@ def checkout(branch, new=True):
 
 def checkout_worktree(branch):
     git_run(["worktree", "add", branch, "-b", branch])
+    print(f"Changing directory to worktree {branch}")
+    # Setup git config
+    git_run(["config", "user.name", "GitHub Actions"])
+    git_run(["config", "user.email", "runner@githubactions.local"])
     os.chdir(os.path.join(MUNKI_REPO, branch))
 
 
