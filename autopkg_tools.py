@@ -27,6 +27,7 @@ from pathlib import Path
 from optparse import OptionParser
 from datetime import datetime
 
+
 DATE = datetime.now().strftime("%Y-%m-%d")
 DEBUG = True
 SLACK_WEBHOOK = os.environ.get("SLACK_WEBHOOK_TOKEN", None)
@@ -230,19 +231,22 @@ def handle_recipe(recipe, opts, failures):
         recipe.run()
         if recipe.results["imported"]:
             print("Imported")
-            branch_worktree = MUNKI_REPO.git.worktree(
-                "add", recipe.branch, "-b", recipe.branch
-            )
+            MUNKI_REPO.git.worktree("add", recipe.branch, "-b", recipe.branch)
             for imported in recipe.results["imported"]:
                 print("Adding files")
                 # TODO: Create flag for commiting pkg
                 recipe_path = f"{MUNKI_DIR}/pkgsinfo/{ imported['pkginfo_path'] }"
-                MUNKI_REPO.index.add([recipe_path])
+                add = MUNKI_REPO.index.add([recipe_path])
+                print(add)
             print("Committing changes")
-            MUNKI_REPO.index.commit(f"'Updated { recipe.name } to { recipe.updated_version }'")
+            commit = MUNKI_REPO.index.commit(
+                f"'Updated { recipe.name } to { recipe.updated_version }'"
+            )
+            print(commit)
             print("Pushing changes")
             origin = MUNKI_REPO.remotes.origin
-            origin.push(recipe.branch)
+            push = origin.push(recipe.branch)
+            print(push)
             MUNKI_REPO.git.worktree("remove", recipe.branch)
     # slack_alert(recipe, opts)
     if not opts.disable_verification:
