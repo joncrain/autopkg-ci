@@ -15,11 +15,11 @@
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import git
 import os
 import sys
 import json
 import plistlib
-import requests
 import shutil
 import subprocess
 import threading
@@ -27,12 +27,15 @@ from pathlib import Path
 from optparse import OptionParser
 from datetime import datetime
 
-
+DATE = datetime.now().strftime("%Y-%m-%d")
 DEBUG = True
 SLACK_WEBHOOK = os.environ.get("SLACK_WEBHOOK_TOKEN", None)
-MUNKI_REPO = os.path.join(os.getenv("GITHUB_WORKSPACE", "/tmp/"), "munki_repo")
+MUNKI_DIR = os.path.join(os.getenv("GITHUB_WORKSPACE", "/tmp/"), "munki_repo")
 OVERRIDES_DIR = os.path.relpath("overrides/")
 RECIPE_TO_RUN = os.environ.get("RECIPE", None)
+WORKING_DIRECTORY = os.getenv("GITHUB_WORKSPACE", "./")
+MUNKI_REPO = git.Repo(MUNKI_DIR)
+AUTOPKG_REPO = git.Repo(WORKING_DIRECTORY)
 
 
 class Recipe(object):
@@ -163,57 +166,57 @@ class Recipe(object):
 
 
 ### GIT FUNCTIONS
-def git_run(cmd, BRANCH=""):
-    cmd = ["git"] + cmd
-    hide_cmd_output = True
+# def git_run(cmd, cwd):
+#     cmd = ["git"] + cmd
+#     hide_cmd_output = True
 
-    if DEBUG:
-        print("Running " + " ".join(cmd))
-        hide_cmd_output = False
-    try:
-        result = subprocess.run(
-            " ".join(cmd),
-            shell=True,
-            cwd=os.path.join(MUNKI_REPO, BRANCH),
-            capture_output=hide_cmd_output,
-        )
-        print(result)
-    except subprocess.CalledProcessError as e:
-        print(e.stderr)
-        raise e
-
-
-def current_branch():
-    git_run(["rev-parse", "--abbrev-ref", "HEAD"])
+#     if DEBUG:
+#         print("Running " + " ".join(cmd))
+#         hide_cmd_output = False
+#     try:
+#         result = subprocess.run(
+#             " ".join(cmd),
+#             shell=True,
+#             cwd=cwd,
+#             capture_output=hide_cmd_output,
+#         )
+#         print(result)
+#     except subprocess.CalledProcessError as e:
+#         print(e.stderr)
+#         raise e
 
 
-def checkout(branch, new=True):
-    if current_branch() != "main" and branch != "main":
-        checkout("main", new=False)
-
-    gitcmd = ["checkout"]
-    if new:
-        gitcmd += ["-b"]
-
-    gitcmd.append(branch)
-    # Lazy branch exists check
-    try:
-        git_run(gitcmd)
-    except subprocess.CalledProcessError as e:
-        if new:
-            checkout(branch, new=False)
-        else:
-            raise e
+# def current_branch():
+#     git_run(["rev-parse", "--abbrev-ref", "HEAD"], MUNKI_DIR)
 
 
-def checkout_worktree(branch):
-    git_run(["worktree", "add", branch, "-b", branch])
-    return
+# def checkout(branch, new=True):
+#     if current_branch() != "main" and branch != "main":
+#         checkout("main", new=False)
+
+#     gitcmd = ["checkout"]
+#     if new:
+#         gitcmd += ["-b"]
+
+#     gitcmd.append(branch)
+#     # Lazy branch exists check
+#     try:
+#         git_run(gitcmd, MUNKI_DIR)
+#     except subprocess.CalledProcessError as e:
+#         if new:
+#             checkout(branch, new=False)
+#         else:
+#             raise e
 
 
-def cleanup_worktree(branch):
-    git_run(["worktree", "remove", branch, "-f"])
-    return
+# def checkout_worktree(branch):
+#     git_run(["worktree", "add", branch, "-b", branch], MUNKI_DIR)
+#     return
+
+
+# def cleanup_worktree(branch):
+#     git_run(["worktree", "remove", branch, "-f"], MUNKI_DIR)
+#     return
 
 
 ### Recipe handling
@@ -227,30 +230,20 @@ def handle_recipe(recipe, opts, failures):
         recipe.run()
         if recipe.results["imported"]:
             print("Imported")
-            checkout_worktree(recipe.branch)
+            branch_worktree = MUNKI_REPO.git.worktree(
+                "add", recipe.branch, "-b", recipe.branch
+            )
             for imported in recipe.results["imported"]:
                 print("Adding files")
                 # TODO: Create flag for commiting pkg
-                # git_run(["add", f"'pkgs/{ imported['pkg_repo_path'] }'"])
-                recipe_path = f"{MUNKI_REPO}/pkgsinfo/{ imported['pkginfo_path'] }"
-                new_recipe_path = f"{MUNKI_REPO}/{recipe.branch}/pkgsinfo/{ imported['pkginfo_path'] }"
-                print(f"Moving pkginfo from {recipe_path} to {new_recipe_path}")
-                shutil.move(recipe_path, new_recipe_path)
-                git_run(
-                    ["add", f"'pkgsinfo/{ imported['pkginfo_path'] }'"], recipe.branch
-                )
+                recipe_path = f"{MUNKI_DIR}/pkgsinfo/{ imported['pkginfo_path'] }"
+                MUNKI_REPO.index.add([recipe_path])
             print("Committing changes")
-            git_run(
-                [
-                    "commit",
-                    "-m",
-                    f"'Updated { recipe.name } to { recipe.updated_version }'",
-                ],
-                recipe.branch,
-            )
+            MUNKI_REPO.index.commit(f"'Updated { recipe.name } to { recipe.updated_version }'")
             print("Pushing changes")
-            git_run(["push", "--set-upstream", "origin", recipe.branch], recipe.branch)
-            cleanup_worktree(recipe.branch)
+            origin = MUNKI_REPO.remotes.origin
+            origin.push(recipe.branch)
+            MUNKI_REPO.git.worktree("remove", recipe.branch)
     # slack_alert(recipe, opts)
     if not opts.disable_verification:
         if not recipe.verified:
@@ -287,13 +280,16 @@ def parse_recipes(recipes, opts):
 ## Icon handling
 def import_icons():
     branch_name = "icon_import_{}".format(datetime.now().strftime("%Y-%m-%d"))
-    checkout(branch_name)
+    MUNKI_REPO.git.worktree("add", branch_name, "-b", branch_name)
     result = subprocess.check_call(
         "/usr/local/munki/iconimporter munki_repo", shell=True
     )
-    git_run(["add", "icons/"])
-    git_run(["commit", "-m", "Added new icons"])
-    git_run(["push", "--set-upstream", "origin", f"{branch_name}"])
+    MUNKI_REPO.index.add(["icons/"])
+    MUNKI_REPO.index.commit("Added new icons")
+    origin = MUNKI_REPO.remotes.origin
+    origin.push(branch_name)
+    MUNKI_REPO.git.worktree("remove", branch_name)
+    return result
 
 
 def main():
@@ -304,8 +300,8 @@ def main():
     parser.add_option(
         "-g",
         "--gitrepo",
-        help="Path to git repo. Defaults to MUNKI_REPO from Autopkg preferences.",
-        default=MUNKI_REPO,
+        help="Path to git repo. Defaults to MUNKI_DIR from Autopkg preferences.",
+        default=MUNKI_DIR,
     )
     parser.add_option(
         "-d",
@@ -364,15 +360,17 @@ def main():
 
     # for thread in threads:
     #     thread.join()
-
+    print(failures)
     if not opts.disable_verification:
         if failures:
             title = " ".join([f"{recipe.name}" for recipe in failures])
             lines = [f"{recipe.results['message']}\n" for recipe in failures]
-            with open("pull_request_title", "a+") as title_file:
-                title_file.write(f"Update trust for {title}")
-            with open("pull_request_body", "a+") as body_file:
-                body_file.writelines(lines)
+            branch_name = f"update_trust-{DATE}"
+            AUTOPKG_REPO.git.checkout(branch_name, b=True)
+            AUTOPKG_REPO.git.add("overrides")
+            AUTOPKG_REPO.git.commit(m=f"Update trust for {title}")
+            AUTOPKG_REPO.git.push("--set-upstream", "origin", branch_name)
+            AUTOPKG_REPO.git.checkout("main")
 
     if opts.icons:
         import_icons()
