@@ -176,7 +176,7 @@ def worktree_commit(recipe):
     print("Fetching latest changes")
     worktree_repo.git.fetch()
     # detect if the branch already exists
-    if recipe.branch in worktree_repo.branches:
+    if recipe.branch in MUNKI_REPO.git.branch("--list", "-r"):
         # pull the latest changes from the remote
         print("Pulling latest changes")
         worktree_repo.git.pull("origin", recipe.branch)
