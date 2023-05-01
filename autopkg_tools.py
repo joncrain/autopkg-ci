@@ -223,6 +223,8 @@ class Recipe(object):
 def worktree_commit(recipe):
     MUNKI_REPO.git.worktree("add", recipe.branch, "-b", recipe.branch)
     worktree_repo_path = os.path.join(MUNKI_DIR, recipe.branch)
+    # print the path to the worktree repo
+    print(f"Worktree repo path: {worktree_repo_path}")
     worktree_repo = git.Repo(worktree_repo_path)
     for imported in recipe.results["imported"]:
         print(f"Adding { imported['pkginfo_path'] }")
