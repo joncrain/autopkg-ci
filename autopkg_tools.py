@@ -240,7 +240,7 @@ def worktree_commit(recipe):
     print("Pushing changes")
     origin = worktree_repo.remotes.origin
     origin.push(recipe.branch)
-    MUNKI_REPO.git.worktree("remove", recipe.branch)
+    MUNKI_REPO.git.worktree("remove", recipe.branch, "-f")
 
 
 ### Recipe handling
