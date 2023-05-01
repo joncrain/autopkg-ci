@@ -62,9 +62,10 @@ jobs:
     - name: Run AutoPkg
       run: |
         # login to gh cli
-        echo ${{ secrets.MUNKI_GITHUB_TOKEN }} | gh auth login --with-token
         pip3 install -r requirements.txt
         python3 autopkg_tools.py -l recipe_list.json
       env:
         RECIPE: ${{ inputs.recipe_override }}
         SLACK_WEBHOOK_TOKEN: ${{ secrets.autopkg_slack_token }}
+        MUNKI_GITHUB_TOKEN: ${{ secrets.MUNKI_GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

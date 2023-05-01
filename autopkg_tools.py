@@ -33,6 +33,8 @@ DEBUG = True
 SLACK_WEBHOOK = os.environ.get("SLACK_WEBHOOK_TOKEN", None)
 MUNKI_DIR = os.path.join(os.getenv("GITHUB_WORKSPACE", "/tmp/"), "munki_repo")
 OVERRIDES_DIR = os.path.relpath("overrides/")
+MUNKI_GITHUB_TOKEN = os.environ.get("MUNKI_GITHUB_TOKEN", None)
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", None)
 RECIPE_TO_RUN = os.environ.get("RECIPE", None)
 WORKING_DIRECTORY = os.getenv("GITHUB_WORKSPACE", "./")
 MUNKI_REPO = git.Repo(MUNKI_DIR)
@@ -201,6 +203,9 @@ def worktree_commit(recipe):
     # origin = worktree_repo.remotes.origin
     # origin.push(recipe.branch)
     MUNKI_REPO.git.worktree("remove", recipe.branch, "-f")
+    # Login to github
+    cmd = f"gh auth login --with-token { MUNKI_GITHUB_TOKEN }"
+    subprocess.check_call(cmd, shell=True)
     # Create pr with gh cli
     cmd = f"gh pr create --title 'feat: { recipe.name } update' --body 'Updated { recipe.name } to { recipe.updated_version }'"
     subprocess.check_call(cmd, shell=True)
@@ -316,8 +321,6 @@ def main():
     global DEBUG
     DEBUG = bool(opts.debug)
 
-    failures = []
-
     recipes = (
         RECIPE_TO_RUN.split(", ")
         if RECIPE_TO_RUN
@@ -335,14 +338,15 @@ def main():
     threads = []
 
     for recipe in recipes:
-        thread = threading.Thread(target=handle_recipe(recipe, opts))
-        threads.append(thread)
+        handle_recipe(recipe, opts)
+    #     thread = threading.Thread(target=handle_recipe(recipe, opts))
+    #     threads.append(thread)
 
-    for thread in threads:
-        thread.start()
+    # for thread in threads:
+    #     thread.start()
 
-    for thread in threads:
-        thread.join()
+    # for thread in threads:
+    #     thread.join()
 
     # if not opts.disable_verification:
     #     if failures:
