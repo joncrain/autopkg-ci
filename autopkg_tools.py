@@ -227,6 +227,12 @@ def worktree_commit(recipe):
     print(f"Worktree repo path: {worktree_repo_path}")
     worktree_repo = git.Repo(worktree_repo_path)
     for imported in recipe.results["imported"]:
+        # move file to worktree repo
+        print(f"Moving { imported['pkginfo_path'] }")
+        shutil.move(
+            f"{MUNKI_DIR}/pkgsinfo/{ imported['pkginfo_path'] }",
+            f"{worktree_repo_path}/pkgsinfo/{ imported['pkginfo_path'] }",
+        )
         print(f"Adding { imported['pkginfo_path'] }")
         # TODO: Create flag for commiting pkg
         recipe_path = f"{worktree_repo_path}/pkgsinfo/{ imported['pkginfo_path'] }"
