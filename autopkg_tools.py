@@ -237,6 +237,10 @@ def worktree_commit(recipe):
         # TODO: Create flag for commiting pkg
         recipe_path = f"{worktree_repo_path}/pkgsinfo/{ imported['pkginfo_path'] }"
         worktree_repo.index.add([recipe_path])
+    print("Commiting changes")
+    worktree_repo.index.commit(
+        f"'Updated { recipe.name } to { recipe.updated_version }'"
+    )
     print("Pushing changes")
     origin = worktree_repo.remotes.origin
     origin.push(recipe.branch)
@@ -354,7 +358,7 @@ def main():
         if opts.list
         else None
     )
-    print(recipes)
+
     if recipes is None:
         print("Recipe --list or RECIPE_TO_RUN not provided!")
         sys.exit(1)
@@ -371,7 +375,7 @@ def main():
 
     # for thread in threads:
     #     thread.join()
-    print(failures)
+
     if not opts.disable_verification:
         if failures:
             title = " ".join([f"{recipe.name}" for recipe in failures])
