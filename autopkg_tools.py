@@ -166,60 +166,6 @@ class Recipe(object):
         return self.results
 
 
-### GIT FUNCTIONS
-# def git_run(cmd, cwd):
-#     cmd = ["git"] + cmd
-#     hide_cmd_output = True
-
-#     if DEBUG:
-#         print("Running " + " ".join(cmd))
-#         hide_cmd_output = False
-#     try:
-#         result = subprocess.run(
-#             " ".join(cmd),
-#             shell=True,
-#             cwd=cwd,
-#             capture_output=hide_cmd_output,
-#         )
-#         print(result)
-#     except subprocess.CalledProcessError as e:
-#         print(e.stderr)
-#         raise e
-
-
-# def current_branch():
-#     git_run(["rev-parse", "--abbrev-ref", "HEAD"], MUNKI_DIR)
-
-
-# def checkout(branch, new=True):
-#     if current_branch() != "main" and branch != "main":
-#         checkout("main", new=False)
-
-#     gitcmd = ["checkout"]
-#     if new:
-#         gitcmd += ["-b"]
-
-#     gitcmd.append(branch)
-#     # Lazy branch exists check
-#     try:
-#         git_run(gitcmd, MUNKI_DIR)
-#     except subprocess.CalledProcessError as e:
-#         if new:
-#             checkout(branch, new=False)
-#         else:
-#             raise e
-
-
-# def checkout_worktree(branch):
-#     git_run(["worktree", "add", branch, "-b", branch], MUNKI_DIR)
-#     return
-
-
-# def cleanup_worktree(branch):
-#     git_run(["worktree", "remove", branch, "-f"], MUNKI_DIR)
-#     return
-
-
 def worktree_commit(recipe):
     MUNKI_REPO.git.worktree("add", recipe.branch, "-b", recipe.branch)
     worktree_repo_path = os.path.join(MUNKI_DIR, recipe.branch)
@@ -242,27 +188,41 @@ def worktree_commit(recipe):
         f"'Updated { recipe.name } to { recipe.updated_version }'"
     )
     print("Pushing changes")
-    origin = worktree_repo.remotes.origin
-    origin.push(recipe.branch)
+    worktree_repo.git.push("--set-upstream", "origin", recipe.branch)
+    # origin = worktree_repo.remotes.origin
+    # origin.push(recipe.branch)
     MUNKI_REPO.git.worktree("remove", recipe.branch, "-f")
 
 
 ### Recipe handling
-def handle_recipe(recipe, opts, failures):
+def handle_recipe(recipe, opts):
     print("Handling " + recipe.name)
     if not opts.disable_verification:
         recipe.verify_trust_info()
         if recipe.verified is False:
             recipe.update_trust_info()
+            # lines = [f"{recipe.results['message']}\n" for recipe in failures]
+            branch_name = f"update_trust-{recipe.name}-{DATE}"
+            AUTOPKG_REPO.get.worktree("add", branch_name, "-b", branch_name)
+            autopkg_worktree_path = os.path.join(WORKING_DIRECTORY, branch_name)
+            autopkg_worktree_repo = git.Repo(autopkg_worktree_path)
+            autopkg_worktree_repo.git.add(recipe.path)
+            autopkg_worktree_repo.git.commit(m=f"Update trust for {recipe.name}")
+            autopkg_worktree_repo.git.push("--set-upstream", "origin", branch_name)
+            AUTOPKG_REPO.get.pull_request(
+                title=f"feat: Update trust for {recipe.name}",
+                body=recipe.results["message"],
+            )
+            AUTOPKG_REPO.git.worktree("remove", branch_name, "-f")
     if recipe.verified in (True, None):
         recipe.run()
         if recipe.results["imported"]:
             print("Imported")
             worktree_commit(recipe)
     # slack_alert(recipe, opts)
-    if not opts.disable_verification:
-        if not recipe.verified:
-            failures.append(recipe)
+    # if not opts.disable_verification:
+    #     if not recipe.verified:
+    #         failures.append(recipe)
     return failures
 
 
@@ -301,8 +261,9 @@ def import_icons():
     )
     MUNKI_REPO.index.add(["icons/"])
     MUNKI_REPO.index.commit("Added new icons")
-    origin = MUNKI_REPO.remotes.origin
-    origin.push(branch_name)
+    MUNKI_REPO.git.push("--set-upstream", "origin", branch_name)
+    # origin = MUNKI_REPO.remotes.origin
+    # origin.push(branch_name)
     MUNKI_REPO.git.worktree("remove", branch_name)
     return result
 
@@ -366,26 +327,25 @@ def main():
     threads = []
 
     for recipe in recipes:
-        handle_recipe(recipe, opts, failures)
-    #     thread = threading.Thread(target=handle_recipe(recipe, opts, failures))
-    #     threads.append(thread)
+        thread = threading.Thread(target=handle_recipe(recipe, opts))
+        threads.append(thread)
 
-    # for thread in threads:
-    #     thread.start()
+    for thread in threads:
+        thread.start()
 
-    # for thread in threads:
-    #     thread.join()
+    for thread in threads:
+        thread.join()
 
-    if not opts.disable_verification:
-        if failures:
-            title = " ".join([f"{recipe.name}" for recipe in failures])
-            lines = [f"{recipe.results['message']}\n" for recipe in failures]
-            branch_name = f"update_trust-{DATE}"
-            AUTOPKG_REPO.git.checkout(branch_name, b=True)
-            AUTOPKG_REPO.git.add("overrides")
-            AUTOPKG_REPO.git.commit(m=f"Update trust for {title}")
-            AUTOPKG_REPO.git.push("--set-upstream", "origin", branch_name)
-            AUTOPKG_REPO.git.checkout("main")
+    # if not opts.disable_verification:
+    #     if failures:
+    #         title = " ".join([f"{recipe.name}" for recipe in failures])
+    #         lines = [f"{recipe.results['message']}\n" for recipe in failures]
+    #         branch_name = f"update_trust-{DATE}"
+    #         AUTOPKG_REPO.git.checkout(branch_name, b=True)
+    #         AUTOPKG_REPO.git.add("overrides")
+    #         AUTOPKG_REPO.git.commit(m=f"Update trust for {title}")
+    #         AUTOPKG_REPO.git.push("--set-upstream", "origin", branch_name)
+    #         AUTOPKG_REPO.git.checkout("main")
 
     if opts.icons:
         import_icons()
