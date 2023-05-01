@@ -222,11 +222,12 @@ class Recipe(object):
 
 def worktree_commit(recipe):
     MUNKI_REPO.git.worktree("add", recipe.branch, "-b", recipe.branch)
-    worktree_repo = git.Repo(os.path.join(MUNKI_DIR, recipe.branch))
+    worktree_repo_path = os.path.join(MUNKI_DIR, recipe.branch)
+    worktree_repo = git.Repo(worktree_repo_path)
     for imported in recipe.results["imported"]:
         print(f"Adding { imported['pkginfo_path'] }")
         # TODO: Create flag for commiting pkg
-        recipe_path = f"{MUNKI_DIR}/pkgsinfo/{ imported['pkginfo_path'] }"
+        recipe_path = f"{worktree_repo_path}/pkgsinfo/{ imported['pkginfo_path'] }"
         worktree_repo.index.add([recipe_path])
     print("Pushing changes")
     origin = worktree_repo.remotes.origin
