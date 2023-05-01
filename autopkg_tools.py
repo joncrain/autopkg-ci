@@ -220,6 +220,20 @@ class Recipe(object):
 #     return
 
 
+def worktree_commit(recipe):
+    MUNKI_REPO.git.worktree("add", recipe.branch, "-b", recipe.branch)
+    worktree_repo = git.Repo(os.path.join(MUNKI_DIR, recipe.branch))
+    for imported in recipe.results["imported"]:
+        print(f"Adding { imported['pkginfo_path'] }")
+        # TODO: Create flag for commiting pkg
+        recipe_path = f"{MUNKI_DIR}/pkgsinfo/{ imported['pkginfo_path'] }"
+        worktree_repo.index.add([recipe_path])
+    print("Pushing changes")
+    origin = worktree_repo.remotes.origin
+    origin.push(recipe.branch)
+    MUNKI_REPO.git.worktree("remove", recipe.branch)
+
+
 ### Recipe handling
 def handle_recipe(recipe, opts, failures):
     print("Handling " + recipe.name)
@@ -231,23 +245,7 @@ def handle_recipe(recipe, opts, failures):
         recipe.run()
         if recipe.results["imported"]:
             print("Imported")
-            MUNKI_REPO.git.worktree("add", recipe.branch, "-b", recipe.branch)
-            for imported in recipe.results["imported"]:
-                print("Adding files")
-                # TODO: Create flag for commiting pkg
-                recipe_path = f"{MUNKI_DIR}/pkgsinfo/{ imported['pkginfo_path'] }"
-                add = MUNKI_REPO.index.add([recipe_path])
-                print(add)
-            print("Committing changes")
-            commit = MUNKI_REPO.index.commit(
-                f"'Updated { recipe.name } to { recipe.updated_version }'"
-            )
-            print(commit)
-            print("Pushing changes")
-            origin = MUNKI_REPO.remotes.origin
-            push = origin.push(recipe.branch)
-            print(push)
-            MUNKI_REPO.git.worktree("remove", recipe.branch)
+            worktree_commit(recipe)
     # slack_alert(recipe, opts)
     if not opts.disable_verification:
         if not recipe.verified:
