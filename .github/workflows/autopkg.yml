@@ -27,8 +27,8 @@ jobs:
 
     - name: Install Munki and AutoPkg
       run: |
-        sudo installer -pkg ./munkitools.pkg -target /
-        sudo installer -pkg ./autopkg.pkg -target /
+        sudo installer -pkg ${{ github.workspace }}/munkitools.pkg -target /
+        sudo installer -pkg ${{ github.workspace }}/autopkg.pkg -target /
 
     - name: Checkout your Munki LFS repo
       uses: actions/checkout@v3
