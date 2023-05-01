@@ -175,9 +175,11 @@ def worktree_commit(recipe):
     # fetch the latest changes from the remote
     print("Fetching latest changes")
     worktree_repo.git.fetch()
-    # pull the latest changes from the remote
-    print("Pulling latest changes")
-    worktree_repo.git.pull("origin", recipe.branch)
+    # detect if the branch already exists
+    if recipe.branch in worktree_repo.branches:
+        # pull the latest changes from the remote
+        print("Pulling latest changes")
+        worktree_repo.git.pull("origin", recipe.branch)
     # checkout the branch
     for imported in recipe.results["imported"]:
         # move file to worktree repo
