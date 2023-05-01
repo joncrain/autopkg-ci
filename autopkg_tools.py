@@ -175,6 +175,7 @@ def worktree_commit(recipe):
     # fetch the latest changes from the remote
     print("Fetching latest changes")
     worktree_repo.git.fetch()
+    # checkout the branch
     for imported in recipe.results["imported"]:
         # move file to worktree repo
         print(f"Moving { imported['pkginfo_path'] }")
