@@ -64,6 +64,7 @@ jobs:
 
     - name: Run AutoPkg
       run: |
+        echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
         pip3 install -r requirements.txt
         python3 autopkg_tools.py -l recipe_list.json
         if [ -f pull_request_title ]; then
