@@ -192,6 +192,10 @@ def worktree_commit(recipe):
     # origin = worktree_repo.remotes.origin
     # origin.push(recipe.branch)
     MUNKI_REPO.git.worktree("remove", recipe.branch, "-f")
+    MUNKI_REPO.git.pull_request(
+        title=f"feat: { recipe.name } update",
+        body=f"Updated { recipe.name } to { recipe.updated_version }",
+    )
 
 
 ### Recipe handling
