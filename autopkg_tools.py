@@ -192,7 +192,7 @@ def worktree_commit(recipe):
     # origin = worktree_repo.remotes.origin
     # origin.push(recipe.branch)
     MUNKI_REPO.git.worktree("remove", recipe.branch, "-f")
-    MUNKI_REPO.git.pull_request(
+    MUNKI_REPO.git.request_pull(
         title=f"feat: { recipe.name } update",
         body=f"Updated { recipe.name } to { recipe.updated_version }",
     )
@@ -213,7 +213,7 @@ def handle_recipe(recipe, opts):
             autopkg_worktree_repo.git.add(recipe.path)
             autopkg_worktree_repo.git.commit(m=f"Update trust for {recipe.name}")
             autopkg_worktree_repo.git.push("--set-upstream", "origin", branch_name)
-            AUTOPKG_REPO.get.pull_request(
+            AUTOPKG_REPO.get.request_pull(
                 title=f"feat: Update trust for {recipe.name}",
                 body=recipe.results["message"],
             )
