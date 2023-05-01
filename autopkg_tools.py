@@ -196,10 +196,9 @@ def worktree_commit(recipe):
     # origin = worktree_repo.remotes.origin
     # origin.push(recipe.branch)
     MUNKI_REPO.git.worktree("remove", recipe.branch, "-f")
-    MUNKI_REPO.git.request_pull(
-        title=f"feat: { recipe.name } update",
-        body=f"Updated { recipe.name } to { recipe.updated_version }",
-    )
+    # Create pr with gh cli
+    cmd = f"gh pr create --title 'feat: { recipe.name } update' --body 'Updated { recipe.name } to { recipe.updated_version }'"
+    subprocess.check_call(cmd, shell=True)
 
 
 ### Recipe handling
@@ -217,10 +216,8 @@ def handle_recipe(recipe, opts):
             autopkg_worktree_repo.git.add(recipe.path)
             autopkg_worktree_repo.git.commit(m=f"Update trust for {recipe.name}")
             autopkg_worktree_repo.git.push("--set-upstream", "origin", branch_name)
-            AUTOPKG_REPO.get.request_pull(
-                title=f"feat: Update trust for {recipe.name}",
-                body=recipe.results["message"],
-            )
+            cmd = f"gh pr create --title 'feat: Update trust for { recipe.name }' --body '{ recipe.results['message'] }'"
+            subprocess.check_call(cmd, shell=True)
             AUTOPKG_REPO.git.worktree("remove", branch_name, "-f")
     if recipe.verified in (True, None):
         recipe.run()
@@ -231,7 +228,7 @@ def handle_recipe(recipe, opts):
     # if not opts.disable_verification:
     #     if not recipe.verified:
     #         failures.append(recipe)
-    return failures
+    return
 
 
 def parse_recipes(recipes, opts):
@@ -270,8 +267,6 @@ def import_icons():
     MUNKI_REPO.index.add(["icons/"])
     MUNKI_REPO.index.commit("Added new icons")
     MUNKI_REPO.git.push("--set-upstream", "origin", branch_name)
-    # origin = MUNKI_REPO.remotes.origin
-    # origin.push(branch_name)
     MUNKI_REPO.git.worktree("remove", branch_name)
     return result
 
