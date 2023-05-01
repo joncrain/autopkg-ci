@@ -75,20 +75,3 @@ jobs:
       env:
         RECIPE: ${{ github.event.inputs.recipe }}
         SLACK_WEBHOOK_TOKEN: ${{ secrets.autopkg_slack_token }}
-
-    - name: Create Trust Info pull request
-      if: env.TITLE
-      run: |
-        export BRANCH_NAME=trust-info-`date +'%Y-%m-%d'`
-        git checkout -b $BRANCH_NAME
-        git add overrides/
-        git commit -m "${{ env.TITLE }}"
-        git push --set-upstream origin $BRANCH_NAME
-        jq -n --arg title "${{ env.TITLE }}" \
-              --arg body "$BODY" \
-              --arg head "$BRANCH_NAME" \
-           '{title: $title, body: $body, head: $head, "base": "${{ github.ref }}"}' | curl -s --request POST \
-           --url https://api.github.com/repos/${{ github.repository }}/pulls \
-           --header 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' \
-           --header 'content-type: application/json' \
-           -d@-
