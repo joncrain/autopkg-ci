@@ -69,4 +69,3 @@ jobs:
         SLACK_WEBHOOK_TOKEN: ${{ secrets.autopkg_slack_token }}
         GH_TOKEN: ${{ secrets.MUNKI_GITHUB_TOKEN }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        MUNKI_GITHUB_TOKEN: ${{ secrets.MUNKI_GITHUB_TOKEN }}
