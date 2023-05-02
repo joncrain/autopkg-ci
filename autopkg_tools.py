@@ -190,6 +190,8 @@ def worktree_commit(recipe):
         "base='main'",
     ]
     output, err, exit_code = run_cmd(cmd)
+    if exit_code != 0:
+        print(err)
 
 
 def handle_recipe(recipe, opts):
@@ -226,6 +228,8 @@ def handle_recipe(recipe, opts):
             "base='main'",
         ]
         output, err, exit_code = run_cmd(cmd)
+        if exit_code != 0:
+            print(err)
         AUTOPKG_REPO.git.worktree("remove", branch_name, "-f")
     if recipe.verified in (True, None):
         recipe.run()
