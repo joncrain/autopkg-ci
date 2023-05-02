@@ -192,6 +192,7 @@ def worktree_commit(recipe):
         "-f",
         "base='main'",
     ]
+    print(str(cmd))
     output, err, exit_code = run_cmd(cmd)
     if exit_code != 0:
         print(err)
