@@ -39,6 +39,9 @@ MUNKI_REPOSITORY = os.getenv("MUNKI_REPOSITORY", "None")
 MUNKI_REPO = git.Repo(MUNKI_REPO_DIR)
 AUTOPKG_REPO = git.Repo(AUTOPKG_REPO_DIR)
 
+console = logging.StreamHandler()
+console.setLevel(logging.DEBUG)
+
 
 class Recipe(object):
     def __init__(self, path):
