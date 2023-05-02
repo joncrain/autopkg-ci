@@ -17,24 +17,22 @@ jobs:
     - name: Checkout AutoPkg recipes (this repo)
       uses: actions/checkout@v3
 
-    - name: Install Munki
-      uses: joncrain/macos-pkg-install@42879f785560a1eeecc14051a176e2010e1d88fc
-      with:
-        pkg_url: https://github.com/munki/munki/releases/download/v${{ vars.MUNKI_VERSION }}/munkitools-${{ vars.MUNKI_EXPLICIT_VERSION }}.pkg
-
-    - name: Install AutoPkg
-      uses: joncrain/macos-pkg-install@42879f785560a1eeecc14051a176e2010e1d88fc
-      with:
-        pkg_url: https://github.com/autopkg/autopkg/releases/download/v${{ vars.AUTOPKG_VERSION }}/autopkg-${{ vars.AUTOPKG_VERSION }}.pkg
-
     - name: Checkout your Munki LFS repo
       uses: actions/checkout@v3
       with:
         repository: ${{ env.MUNKI_REPOSITORY }}
         token: ${{ secrets.MUNKI_GITHUB_TOKEN }}
-        fetch-depth: 1
-        ref: refs/heads/main
         path: munki_repo
+
+    - name: Install Munki
+      uses: joncrain/macos-pkg-install@10269cf9fd6482d0b58f42edb3832e030d651f92
+      with:
+        pkg_url: https://github.com/munki/munki/releases/download/v${{ vars.MUNKI_VERSION }}/munkitools-${{ vars.MUNKI_EXPLICIT_VERSION }}.pkg
+
+    - name: Install AutoPkg
+      uses: joncrain/macos-pkg-install@10269cf9fd6482d0b58f42edb3832e030d651f92
+      with:
+        pkg_url: https://github.com/autopkg/autopkg/releases/download/v${{ vars.AUTOPKG_VERSION }}/autopkg-${{ vars.AUTOPKG_VERSION }}.pkg
 
     - name: Configure AutoPkg
       run: |
