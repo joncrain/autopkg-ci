@@ -11,6 +11,8 @@ jobs:
   AutoPkg:
     runs-on: macos-latest
     timeout-minutes: 150 # Keeps your builds from running too long
+    env:
+      MUNKI_REPOSITORY: joncrain/munki_repo
     steps:
     - name: Checkout AutoPkg recipes (this repo)
       uses: actions/checkout@v3
@@ -31,7 +33,7 @@ jobs:
     - name: Checkout your Munki LFS repo
       uses: actions/checkout@v3
       with:
-        repository: joncrain/munki_repo
+        repository: ${{ env.MUNKI_REPOSITORY }}
         token: ${{ secrets.MUNKI_GITHUB_TOKEN }}
         fetch-depth: 1
         ref: refs/heads/main
@@ -65,3 +67,4 @@ jobs:
       env:
         RECIPE: ${{ github.event.inputs.recipe }}
         SLACK_WEBHOOK_TOKEN: ${{ secrets.autopkg_slack_token }}
+        MUNKI_REPOSITORY: ${{ env.MUNKI_REPOSITORY }}

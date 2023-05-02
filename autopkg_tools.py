@@ -37,6 +37,8 @@ OVERRIDES_DIR = os.path.relpath("overrides/")
 # GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", None)
 RECIPE_TO_RUN = os.environ.get("RECIPE", None)
 WORKING_DIRECTORY = os.getenv("GITHUB_WORKSPACE", "./")
+GITHUB_REPOSITORY = os.getenv("GITHUB_REPOSITORY", "None")
+MUNKI_REPOSITORY = os.getenv("MUNKI_REPOSITORY", "None")
 MUNKI_REPO = git.Repo(MUNKI_DIR)
 AUTOPKG_REPO = git.Repo(WORKING_DIRECTORY)
 
@@ -171,50 +173,33 @@ class Recipe(object):
 def worktree_commit(recipe):
     MUNKI_REPO.git.worktree("add", recipe.branch, "-b", recipe.branch)
     worktree_repo_path = os.path.join(MUNKI_DIR, recipe.branch)
-    # print the path to the worktree repo
-    print(f"Worktree repo path: {worktree_repo_path}")
     worktree_repo = git.Repo(worktree_repo_path)
-    # fetch the latest changes from the remote
-    print("Fetching latest changes")
     worktree_repo.git.fetch()
-    # detect if the branch already exists
     if recipe.branch in MUNKI_REPO.git.branch("--list", "-r"):
-        # pull the latest changes from the remote
-        print("Pulling latest changes")
         worktree_repo.git.pull("origin", recipe.branch)
-    # checkout the branch
     for imported in recipe.results["imported"]:
-        # move file to worktree repo
-        print(f"Moving { imported['pkginfo_path'] }")
         shutil.move(
             f"{MUNKI_DIR}/pkgsinfo/{ imported['pkginfo_path'] }",
             f"{worktree_repo_path}/pkgsinfo/{ imported['pkginfo_path'] }",
         )
-        print(f"Adding { imported['pkginfo_path'] }")
         # TODO: Create flag for commiting pkg
         recipe_path = f"{worktree_repo_path}/pkgsinfo/{ imported['pkginfo_path'] }"
         worktree_repo.index.add([recipe_path])
-    print("Commiting changes")
     worktree_repo.index.commit(
         f"'Updated { recipe.name } to { recipe.updated_version }'"
     )
-    print("Pushing changes")
     worktree_repo.git.push("--set-upstream", "origin", recipe.branch)
     MUNKI_REPO.git.worktree("remove", recipe.branch, "-f")
-    # Login to github
-    # cmd = f"gh auth login --with-token {MUNKI_GITHUB_TOKEN}"
-    # print(cmd)
-    # subprocess.check_call(cmd, shell=True)
-    # Create pr with gh cli
     cmd = f"""gh api --method POST -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" \
-    /repos/joncrain/munki_repo/pulls \
+    /repos/{MUNKI_REPOSITORY}/pulls \
     -f title='feat: { recipe.name } update' \
     -f body='Updated { recipe.name } to { recipe.updated_version }' \
     -f head='{ recipe.branch }' \
     -f base='main' """
-    # cmd = f"gh pr create --title 'feat: { recipe.name } update' --body 'Updated { recipe.name } to { recipe.updated_version }'"
-    subprocess.check_call(cmd, shell=True)
-
+    try:
+        subprocess.check_call(cmd, shell=True)
+    except:
+        print("Failed to create pull request. It may already exist.")
 
 ### Recipe handling
 def handle_recipe(recipe, opts):
@@ -223,7 +208,6 @@ def handle_recipe(recipe, opts):
         recipe.verify_trust_info()
         if recipe.verified is False:
             recipe.update_trust_info()
-            # lines = [f"{recipe.results['message']}\n" for recipe in failures]
             branch_name = f"update_trust-{recipe.name}-{DATE}"
             AUTOPKG_REPO.get.worktree("add", branch_name, "-b", branch_name)
             autopkg_worktree_path = os.path.join(WORKING_DIRECTORY, branch_name)
@@ -231,7 +215,16 @@ def handle_recipe(recipe, opts):
             autopkg_worktree_repo.git.add(recipe.path)
             autopkg_worktree_repo.git.commit(m=f"Update trust for {recipe.name}")
             autopkg_worktree_repo.git.push("--set-upstream", "origin", branch_name)
-            cmd = f"gh pr create --title 'feat: Update trust for { recipe.name }' --body '{ recipe.results['message'] }'"
+            cmd = f"""gh api --method POST -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/{GITHUB_REPOSITORY}/pulls \
+            -f title='feat: Update trust for { recipe.name }' \
+            -f body='{ recipe.results['message'] }' \
+            -f head='{ branch_name }' \
+            -f base='main' """
+            try:
+                subprocess.check_call(cmd, shell=True)
+            except:
+                print("Failed to create pull request. It may already exist.")
             subprocess.check_call(cmd, shell=True)
             AUTOPKG_REPO.git.worktree("remove", branch_name, "-f")
     if recipe.verified in (True, None):
