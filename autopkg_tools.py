@@ -206,7 +206,13 @@ def worktree_commit(recipe):
     # print(cmd)
     # subprocess.check_call(cmd, shell=True)
     # Create pr with gh cli
-    cmd = f"gh pr create --title 'feat: { recipe.name } update' --body 'Updated { recipe.name } to { recipe.updated_version }'"
+    cmd = f"""gh api --method POST -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" \
+    /repos/joncrain/munki_repo/pulls \
+    -f title='feat: { recipe.name } update' \
+    -f body='Updated { recipe.name } to { recipe.updated_version }' \
+    -f head='{ recipe.branch }' \
+    -f base='main' """
+    # cmd = f"gh pr create --title 'feat: { recipe.name } update' --body 'Updated { recipe.name } to { recipe.updated_version }'"
     subprocess.check_call(cmd, shell=True)
 
 
