@@ -39,8 +39,7 @@ MUNKI_REPOSITORY = os.getenv("MUNKI_REPOSITORY", "None")
 MUNKI_REPO = git.Repo(MUNKI_REPO_DIR)
 AUTOPKG_REPO = git.Repo(AUTOPKG_REPO_DIR)
 
-console = logging.StreamHandler()
-console.setLevel(logging.DEBUG)
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
 
 class Recipe(object):
@@ -147,7 +146,7 @@ class Recipe(object):
 
 
 def run_cmd(cmd):
-    logging.debug(f"Running {str(cmd)}")
+    logging.debug(f"Running { ' '.join(cmd)}")
     run = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     output, err = run.communicate()
     exit_code = run.wait()
