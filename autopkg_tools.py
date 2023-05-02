@@ -204,9 +204,9 @@ def worktree_commit(recipe):
     # origin.push(recipe.branch)
     MUNKI_REPO.git.worktree("remove", recipe.branch, "-f")
     # Login to github
-    cmd = f"gh auth login --with-token {MUNKI_GITHUB_TOKEN}"
-    print(cmd)
-    subprocess.check_call(cmd, shell=True)
+    # cmd = f"gh auth login --with-token {MUNKI_GITHUB_TOKEN}"
+    # print(cmd)
+    # subprocess.check_call(cmd, shell=True)
     # Create pr with gh cli
     cmd = f"gh pr create --title 'feat: { recipe.name } update' --body 'Updated { recipe.name } to { recipe.updated_version }'"
     subprocess.check_call(cmd, shell=True)

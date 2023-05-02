@@ -16,12 +16,10 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Download Munki
-      if: steps.munki-pkg-cache.outputs.cache-hit != 'true'
       run: |
         curl -L https://github.com/munki/munki/releases/download/v${{ vars.MUNKI_VERSION }}/munkitools-${{ vars.MUNKI_EXPLICIT_VERSION }}.pkg --output ${{ github.workspace }}/munkitools.pkg
 
     - name: Download AutoPkg
-      if: steps.autopkg-pkg-cache.outputs.cache-hit != 'true'
       run: |
         curl -L https://github.com/autopkg/autopkg/releases/download/v${{ vars.AUTOPKG_VERSION }}/autopkg-${{ vars.AUTOPKG_VERSION }}.pkg --output ${{ github.workspace }}/autopkg.pkg
 
@@ -40,7 +38,6 @@ jobs:
         path: munki_repo
 
     - name: Configure AutoPkg
-      if: steps.download-artifact.outputs.found_artifact != 'true'
       run: |
         defaults write com.github.autopkg RECIPE_OVERRIDE_DIRS "$GITHUB_WORKSPACE"/overrides/
         defaults write com.github.autopkg RECIPE_REPO_DIR "$GITHUB_WORKSPACE"/repos/
@@ -51,12 +48,10 @@ jobs:
         git config --global user.email "runner@githubactions.local"
 
     - name: Configure AutoPkg Repos
-      if: steps.download-artifact.outputs.found_artifact != 'true'
       run: |
         for repo in $(cat repo_list.txt); do autopkg repo-add "$repo"; done
 
     - name: Update AutoPkg Repos
-      if: steps.download-artifact.outputs.found_artifact == 'true'
       run: autopkg repo-update all
 
     - name: Run makecatalogs
@@ -69,5 +64,5 @@ jobs:
       env:
         RECIPE: ${{ github.event.inputs.recipe }}
         SLACK_WEBHOOK_TOKEN: ${{ secrets.autopkg_slack_token }}
-        MUNKI_GITHUB_TOKEN: ${{ secrets.MUNKI_GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.MUNKI_GITHUB_TOKEN }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
