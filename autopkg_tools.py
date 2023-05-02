@@ -239,7 +239,7 @@ def handle_recipe(recipe, opts):
 
 def parse_recipes(recipes, opts):
     recipe_list = []
-    if RECIPE_TO_RUN or opts.recipe:
+    if RECIPE_TO_RUN:
         for recipe in recipes:
             ext = os.path.splitext(recipe)[1]
             if ext != ".recipe":
