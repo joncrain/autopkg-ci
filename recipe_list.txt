@@ -1,6 +1,0 @@
-AdobeReader.munki.recipe
-Cyberduck.munki.recipe
-Firefox.munki.recipe
-GoogleChrome.munki.recipe
-MicrosoftEdge.munki.recipe
-Spotify.munki.recipe
