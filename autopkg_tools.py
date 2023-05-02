@@ -177,10 +177,6 @@ def worktree_commit(recipe):
         "api",
         "--method",
         "POST",
-        "-H",
-        "'Accept: application/vnd.github+json'",
-        "-H",
-        "'X-GitHub-Api-Version: 2022-11-28'",
         f"/repos/{MUNKI_REPOSITORY}/pulls",
         "-f",
         f"title='feat: { recipe.name } update'",
@@ -191,7 +187,6 @@ def worktree_commit(recipe):
         "-f",
         "base='main'",
     ]
-    print(str(cmd))
     output, err, exit_code = run_cmd(cmd)
     if exit_code != 0:
         print(err)
@@ -216,10 +211,6 @@ def handle_recipe(recipe, opts):
             "api",
             "--method",
             "POST",
-            "-H",
-            "'Accept: application/vnd.github+json'",
-            "-H",
-            "'X-GitHub-Api-Version: 2022-11-28'",
             f"/repos/{GITHUB_REPOSITORY}/pulls",
             "-f",
             f"title='feat: Update trust for { recipe.name }'",
