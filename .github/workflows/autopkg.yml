@@ -17,18 +17,15 @@ jobs:
     - name: Checkout AutoPkg recipes (this repo)
       uses: actions/checkout@v3
 
-    - name: Download Munki
-      run: |
-        curl -L https://github.com/munki/munki/releases/download/v${{ vars.MUNKI_VERSION }}/munkitools-${{ vars.MUNKI_EXPLICIT_VERSION }}.pkg --output ${{ github.workspace }}/munkitools.pkg
+    - name: Install Munki
+      uses: joncrain/macos-pkg-install@v1.0
+      with:
+        pkg_url: https://github.com/munki/munki/releases/download/v${{ vars.MUNKI_VERSION }}/munkitools-${{ vars.MUNKI_EXPLICIT_VERSION }}.pkg
 
-    - name: Download AutoPkg
-      run: |
-        curl -L https://github.com/autopkg/autopkg/releases/download/v${{ vars.AUTOPKG_VERSION }}/autopkg-${{ vars.AUTOPKG_VERSION }}.pkg --output ${{ github.workspace }}/autopkg.pkg
-
-    - name: Install Munki and AutoPkg
-      run: |
-        sudo installer -pkg ${{ github.workspace }}/munkitools.pkg -target /
-        sudo installer -pkg ${{ github.workspace }}/autopkg.pkg -target /
+    - name: Install AutoPkg
+      uses: joncrain/macos-pkg-install@v1.0
+      with:
+        pkg_url: https://github.com/autopkg/autopkg/releases/download/v${{ vars.AUTOPKG_VERSION }}/autopkg-${{ vars.AUTOPKG_VERSION }}.pkg
 
     - name: Checkout your Munki LFS repo
       uses: actions/checkout@v3
