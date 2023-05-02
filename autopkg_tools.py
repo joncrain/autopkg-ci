@@ -254,7 +254,7 @@ def parse_recipes(recipes, opts):
             parser = plistlib.load
         else:
             print(f'Invalid run list extension "{ ext }" (expected plist or json)')
-            sys.exit(1
+            sys.exit(1)
         with open(recipes, "rb") as f:
             recipe_list = parser(f)
     return map(Recipe, recipe_list)
