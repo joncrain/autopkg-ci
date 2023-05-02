@@ -33,8 +33,6 @@ DEBUG = True
 SLACK_WEBHOOK = os.environ.get("SLACK_WEBHOOK_TOKEN", None)
 MUNKI_DIR = os.path.join(os.getenv("GITHUB_WORKSPACE", "/tmp/"), "munki_repo")
 OVERRIDES_DIR = os.path.relpath("overrides/")
-# MUNKI_GITHUB_TOKEN = os.environ.get("MUNKI_GITHUB_TOKEN", "WHY_IS_THIS_NOT_SET")
-# GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", None)
 RECIPE_TO_RUN = os.environ.get("RECIPE", None)
 WORKING_DIRECTORY = os.getenv("GITHUB_WORKSPACE", "./")
 GITHUB_REPOSITORY = os.getenv("GITHUB_REPOSITORY", "None")
@@ -241,7 +239,6 @@ def handle_recipe(recipe, opts):
 
 def parse_recipes(recipes, opts):
     recipe_list = []
-    ## Added this section so that we can run individual recipes
     if RECIPE_TO_RUN or opts.recipe:
         for recipe in recipes:
             ext = os.path.splitext(recipe)[1]
@@ -257,11 +254,9 @@ def parse_recipes(recipes, opts):
             parser = plistlib.load
         else:
             print(f'Invalid run list extension "{ ext }" (expected plist or json)')
-            sys.exit(1)
-
+            sys.exit(1
         with open(recipes, "rb") as f:
             recipe_list = parser(f)
-
     return map(Recipe, recipe_list)
 
 
@@ -303,11 +298,6 @@ def main():
         help="Disables recipe verification.",
     )
     parser.add_option(
-        "-r",
-        "--recipe",
-        help="Run a single recipe.",
-    )
-    parser.add_option(
         "-i",
         "--icons",
         action="store_true",
@@ -319,15 +309,7 @@ def main():
     global DEBUG
     DEBUG = bool(opts.debug)
 
-    recipes = (
-        RECIPE_TO_RUN.split(", ")
-        if RECIPE_TO_RUN
-        else [opts.recipe]
-        if opts.recipe
-        else opts.list
-        if opts.list
-        else None
-    )
+    recipes = RECIPE_TO_RUN.split(", ") if RECIPE_TO_RUN else opts.list if opts.list else None
 
     if recipes is None:
         print("Recipe --list or RECIPE_TO_RUN not provided!")
@@ -336,26 +318,15 @@ def main():
     threads = []
 
     for recipe in recipes:
-        handle_recipe(recipe, opts)
-    #     thread = threading.Thread(target=handle_recipe(recipe, opts))
-    #     threads.append(thread)
+        # handle_recipe(recipe, opts)
+        thread = threading.Thread(target=handle_recipe(recipe, opts))
+        threads.append(thread)
 
-    # for thread in threads:
-    #     thread.start()
+    for thread in threads:
+        thread.start()
 
-    # for thread in threads:
-    #     thread.join()
-
-    # if not opts.disable_verification:
-    #     if failures:
-    #         title = " ".join([f"{recipe.name}" for recipe in failures])
-    #         lines = [f"{recipe.results['message']}\n" for recipe in failures]
-    #         branch_name = f"update_trust-{DATE}"
-    #         AUTOPKG_REPO.git.checkout(branch_name, b=True)
-    #         AUTOPKG_REPO.git.add("overrides")
-    #         AUTOPKG_REPO.git.commit(m=f"Update trust for {title}")
-    #         AUTOPKG_REPO.git.push("--set-upstream", "origin", branch_name)
-    #         AUTOPKG_REPO.git.checkout("main")
+    for thread in threads:
+        thread.join()
 
     if opts.icons:
         import_icons()
