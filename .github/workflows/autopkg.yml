@@ -64,15 +64,11 @@ jobs:
 
     - name: Run AutoPkg
       run: |
-        echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
         pip3 install -r requirements.txt
         python3 autopkg_tools.py -l recipe_list.json
-        if [ -f pull_request_title ]; then
-        echo "TITLE=$(cat pull_request_title)" >> $GITHUB_ENV
-        echo "BODY<<EOF" >> $GITHUB_ENV
-        cat pull_request_body >> $GITHUB_ENV
-        echo "EOF" >> $GITHUB_ENV
-        fi
       env:
         RECIPE: ${{ github.event.inputs.recipe }}
         SLACK_WEBHOOK_TOKEN: ${{ secrets.autopkg_slack_token }}
+        SLACK_WEBHOOK_TOKEN: ${{ secrets.autopkg_slack_token }}
+        MUNKI_GITHUB_TOKEN: ${{ secrets.MUNKI_GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

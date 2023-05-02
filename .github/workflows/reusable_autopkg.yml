@@ -61,7 +61,6 @@ jobs:
 
     - name: Run AutoPkg
       run: |
-        # login to gh cli
         pip3 install -r requirements.txt
         python3 autopkg_tools.py -l recipe_list.json
       env:

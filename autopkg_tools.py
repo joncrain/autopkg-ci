@@ -33,8 +33,8 @@ DEBUG = True
 SLACK_WEBHOOK = os.environ.get("SLACK_WEBHOOK_TOKEN", None)
 MUNKI_DIR = os.path.join(os.getenv("GITHUB_WORKSPACE", "/tmp/"), "munki_repo")
 OVERRIDES_DIR = os.path.relpath("overrides/")
-MUNKI_GITHUB_TOKEN = os.environ.get("GH_TOKEN", "WHY_IS_THIS_NOT_SET")
-# GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", None)
+MUNKI_GITHUB_TOKEN = os.environ.get("MUNKI_GITHUB_TOKEN", "WHY_IS_THIS_NOT_SET")
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", None)
 RECIPE_TO_RUN = os.environ.get("RECIPE", None)
 WORKING_DIRECTORY = os.getenv("GITHUB_WORKSPACE", "./")
 MUNKI_REPO = git.Repo(MUNKI_DIR)
@@ -205,6 +205,7 @@ def worktree_commit(recipe):
     MUNKI_REPO.git.worktree("remove", recipe.branch, "-f")
     # Login to github
     cmd = f"gh auth login --with-token {MUNKI_GITHUB_TOKEN}"
+    print(cmd)
     subprocess.check_call(cmd, shell=True)
     # Create pr with gh cli
     cmd = f"gh pr create --title 'feat: { recipe.name } update' --body 'Updated { recipe.name } to { recipe.updated_version }'"
