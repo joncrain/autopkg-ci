@@ -15,35 +15,34 @@
 #
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import git
-import os
-import sys
 import json
+import logging
+import os
 import plistlib
 import shutil
 import subprocess
+import sys
 import threading
-from pathlib import Path
-from optparse import OptionParser
 from datetime import datetime
+from optparse import OptionParser
+from pathlib import Path
 
+import git
 
-DATE = datetime.now().strftime("%Y-%m-%d")
-DEBUG = True
 SLACK_WEBHOOK = os.environ.get("SLACK_WEBHOOK_TOKEN", None)
-MUNKI_DIR = os.path.join(os.getenv("GITHUB_WORKSPACE", "/tmp/"), "munki_repo")
-OVERRIDES_DIR = os.path.relpath("overrides/")
+AUTOPKG_REPO_DIR = os.getenv("GITHUB_WORKSPACE", "./")
+MUNKI_REPO_DIR = os.path.join(AUTOPKG_REPO_DIR, "munki_repo")
 RECIPE_TO_RUN = os.environ.get("RECIPE", None)
-WORKING_DIRECTORY = os.getenv("GITHUB_WORKSPACE", "./")
 GITHUB_REPOSITORY = os.getenv("GITHUB_REPOSITORY", "None")
 MUNKI_REPOSITORY = os.getenv("MUNKI_REPOSITORY", "None")
-MUNKI_REPO = git.Repo(MUNKI_DIR)
-AUTOPKG_REPO = git.Repo(WORKING_DIRECTORY)
+# setup gitpython repos
+MUNKI_REPO = git.Repo(MUNKI_REPO_DIR)
+AUTOPKG_REPO = git.Repo(AUTOPKG_REPO_DIR)
 
 
 class Recipe(object):
     def __init__(self, path):
-        self.path = os.path.join(OVERRIDES_DIR, path)
+        self.path = os.path.join(AUTOPKG_REPO_DIR, "overrides", path)
         self.error = False
         self.results = {}
         self.updated = False
@@ -83,17 +82,8 @@ class Recipe(object):
 
     def verify_trust_info(self):
         cmd = ["/usr/local/bin/autopkg", "verify-trust-info", self.path, "-vvv"]
-        cmd = " ".join(cmd)
-
-        if DEBUG:
-            print("Running " + str(cmd))
-
-        p = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
-        )
-        (output, err) = p.communicate()
-        p_status = p.wait()
-        if p_status == 0:
+        output, err, exit_code = run_cmd(cmd)
+        if exit_code == 0:
             self.verified = True
         else:
             err = err.decode()
@@ -103,17 +93,8 @@ class Recipe(object):
 
     def update_trust_info(self):
         cmd = ["/usr/local/bin/autopkg", "update-trust-info", self.path]
-        cmd = " ".join(cmd)
-
-        if DEBUG:
-            print("Running " + str(cmd))
-
-        # Fail loudly if this exits 0
-        try:
-            subprocess.check_call(cmd, shell=True)
-        except subprocess.CalledProcessError as e:
-            print(e.stderr)
-            raise e
+        output, err, exit_code = run_cmd(cmd)
+        return output
 
     def _parse_report(self, report):
         with open(report, "rb") as f:
@@ -140,47 +121,48 @@ class Recipe(object):
             if not os.path.isfile(report):
                 # Letting autopkg create them has led to errors on github runners
                 Path(report).touch()
-            try:
-                cmd = [
-                    "/usr/local/bin/autopkg",
-                    "run",
-                    self.path,
-                    "-v",
-                    "--post",
-                    "io.github.hjuutilainen.VirusTotalAnalyzer/VirusTotalAnalyzer",
-                    "--report-plist",
-                    report,
-                ]
-                cmd = " ".join(cmd)
-                if DEBUG:
-                    print("Running " + str(cmd))
-
-                subprocess.check_call(cmd, shell=True)
-
-            except subprocess.CalledProcessError as e:
+            cmd = [
+                "/usr/local/bin/autopkg",
+                "run",
+                self.path,
+                "-v",
+                "--post",
+                "io.github.hjuutilainen.VirusTotalAnalyzer/VirusTotalAnalyzer",
+                "--report-plist",
+                report,
+            ]
+            output, err, exit_code = run_cmd(cmd)
+            if err:
                 self.error = True
-
+                self.results["failed"] = True
+                self.results["imported"] = ""
             self._has_run = True
             self.results = self._parse_report(report)
             if not self.results["failed"] and not self.error and self.updated_version:
                 self.updated = True
-
         return self.results
+
+
+def run_cmd(cmd):
+    logging.debug(f"Running {str(cmd)}")
+    run = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    output, err = run.communicate()
+    exit_code = run.wait()
+    return output, err, exit_code
 
 
 def worktree_commit(recipe):
     MUNKI_REPO.git.worktree("add", recipe.branch, "-b", recipe.branch)
-    worktree_repo_path = os.path.join(MUNKI_DIR, recipe.branch)
+    worktree_repo_path = os.path.join(MUNKI_REPO_DIR, recipe.branch)
     worktree_repo = git.Repo(worktree_repo_path)
     worktree_repo.git.fetch()
     if recipe.branch in MUNKI_REPO.git.branch("--list", "-r"):
         worktree_repo.git.pull("origin", recipe.branch)
     for imported in recipe.results["imported"]:
         shutil.move(
-            f"{MUNKI_DIR}/pkgsinfo/{ imported['pkginfo_path'] }",
+            f"{MUNKI_REPO_DIR}/pkgsinfo/{ imported['pkginfo_path'] }",
             f"{worktree_repo_path}/pkgsinfo/{ imported['pkginfo_path'] }",
         )
-        # TODO: Create flag for commiting pkg
         recipe_path = f"{worktree_repo_path}/pkgsinfo/{ imported['pkginfo_path'] }"
         worktree_repo.index.add([recipe_path])
     worktree_repo.index.commit(
@@ -188,52 +170,69 @@ def worktree_commit(recipe):
     )
     worktree_repo.git.push("--set-upstream", "origin", recipe.branch)
     MUNKI_REPO.git.worktree("remove", recipe.branch, "-f")
-    cmd = f"""gh api --method POST -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" \
-    /repos/{MUNKI_REPOSITORY}/pulls \
-    -f title='feat: { recipe.name } update' \
-    -f body='Updated { recipe.name } to { recipe.updated_version }' \
-    -f head='{ recipe.branch }' \
-    -f base='main' """
-    try:
-        subprocess.check_call(cmd, shell=True)
-    except:
-        print("Failed to create pull request. It may already exist.")
+    cmd = [
+        "gh",
+        "api",
+        "--method",
+        "POST",
+        "-H",
+        "Accept: application/vnd.github+json",
+        "-H",
+        "X-GitHub-Api-Version: 2022-11-28",
+        "/repos/{MUNKI_REPOSITORY}/pulls",
+        "-f",
+        f"title='feat: { recipe.name } update'",
+        "-f",
+        f"body='Updated { recipe.name } to { recipe.updated_version }'",
+        "-f",
+        f"head='{ recipe.branch }'",
+        "-f",
+        "base='main'",
+    ]
+    output, err, exit_code = run_cmd(cmd)
 
-### Recipe handling
+
 def handle_recipe(recipe, opts):
-    print("Handling " + recipe.name)
-    if not opts.disable_verification:
-        recipe.verify_trust_info()
-        if recipe.verified is False:
-            recipe.update_trust_info()
-            branch_name = f"update_trust-{recipe.name}-{DATE}"
-            AUTOPKG_REPO.get.worktree("add", branch_name, "-b", branch_name)
-            autopkg_worktree_path = os.path.join(WORKING_DIRECTORY, branch_name)
-            autopkg_worktree_repo = git.Repo(autopkg_worktree_path)
-            autopkg_worktree_repo.git.add(recipe.path)
-            autopkg_worktree_repo.git.commit(m=f"Update trust for {recipe.name}")
-            autopkg_worktree_repo.git.push("--set-upstream", "origin", branch_name)
-            cmd = f"""gh api --method POST -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" \
-            /repos/{GITHUB_REPOSITORY}/pulls \
-            -f title='feat: Update trust for { recipe.name }' \
-            -f body='{ recipe.results['message'] }' \
-            -f head='{ branch_name }' \
-            -f base='main' """
-            try:
-                subprocess.check_call(cmd, shell=True)
-            except:
-                print("Failed to create pull request. It may already exist.")
-            subprocess.check_call(cmd, shell=True)
-            AUTOPKG_REPO.git.worktree("remove", branch_name, "-f")
+    logging.debug(f"Handling {recipe.name}")
+    recipe.verify_trust_info()
+    if recipe.verified is False:
+        recipe.update_trust_info()
+        branch_name = (
+            f"update_trust-{recipe.name}-{datetime.now().strftime('%Y-%m-%d')}"
+        )
+        AUTOPKG_REPO.get.worktree("add", branch_name, "-b", branch_name)
+        autopkg_worktree_path = os.path.join(AUTOPKG_REPO_DIR, branch_name)
+        autopkg_worktree_repo = git.Repo(autopkg_worktree_path)
+        autopkg_worktree_repo.git.add(os.join("overrides", recipe.path))
+        autopkg_worktree_repo.git.commit(m=f"Update trust for {recipe.name}")
+        autopkg_worktree_repo.git.push("--set-upstream", "origin", branch_name)
+        cmd = [
+            "gh",
+            "api",
+            "--method",
+            "POST",
+            "-H",
+            "Accept: application/vnd.github+json",
+            "-H",
+            "X-GitHub-Api-Version: 2022-11-28",
+            "/repos/{GITHUB_REPOSITORY}/pulls",
+            "-f",
+            f"title='feat: Update trust for { recipe.name }'",
+            "-f",
+            f"body='{ recipe.results['message'] }'",
+            "-f",
+            f"head='{ branch_name }'",
+            "-f",
+            "base='main'",
+        ]
+        output, err, exit_code = run_cmd(cmd)
+        AUTOPKG_REPO.git.worktree("remove", branch_name, "-f")
     if recipe.verified in (True, None):
         recipe.run()
         if recipe.results["imported"]:
             print("Imported")
             worktree_commit(recipe)
     # slack_alert(recipe, opts)
-    # if not opts.disable_verification:
-    #     if not recipe.verified:
-    #         failures.append(recipe)
     return
 
 
@@ -280,24 +279,6 @@ def main():
         "-l", "--list", help="Path to a plist or JSON list of recipe names."
     )
     parser.add_option(
-        "-g",
-        "--gitrepo",
-        help="Path to git repo. Defaults to MUNKI_DIR from Autopkg preferences.",
-        default=MUNKI_DIR,
-    )
-    parser.add_option(
-        "-d",
-        "--debug",
-        action="store_true",
-        help="Disables sending Slack alerts and adds more verbosity to output.",
-    )
-    parser.add_option(
-        "-v",
-        "--disable_verification",
-        action="store_true",
-        help="Disables recipe verification.",
-    )
-    parser.add_option(
         "-i",
         "--icons",
         action="store_true",
@@ -306,10 +287,9 @@ def main():
 
     (opts, _) = parser.parse_args()
 
-    global DEBUG
-    DEBUG = bool(opts.debug)
-
-    recipes = RECIPE_TO_RUN.split(", ") if RECIPE_TO_RUN else opts.list if opts.list else None
+    recipes = (
+        RECIPE_TO_RUN.split(", ") if RECIPE_TO_RUN else opts.list if opts.list else None
+    )
 
     if recipes is None:
         print("Recipe --list or RECIPE_TO_RUN not provided!")
