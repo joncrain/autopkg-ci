@@ -202,7 +202,7 @@ def handle_recipe(recipe, opts):
         branch_name = (
             f"update_trust-{recipe.name}-{datetime.now().strftime('%Y-%m-%d')}"
         )
-        AUTOPKG_REPO.get.worktree("add", branch_name, "-b", branch_name)
+        AUTOPKG_REPO.git.worktree("add", branch_name, "-b", branch_name)
         autopkg_worktree_path = os.path.join(AUTOPKG_REPO_DIR, branch_name)
         autopkg_worktree_repo = git.Repo(autopkg_worktree_path)
         autopkg_worktree_repo.git.add(os.join("overrides", recipe.path))
