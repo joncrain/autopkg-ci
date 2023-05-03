@@ -206,7 +206,9 @@ def handle_recipe(recipe, opts):
         autopkg_worktree_path = os.path.join(AUTOPKG_REPO_DIR, branch_name)
         autopkg_worktree_repo = git.Repo(autopkg_worktree_path)
         shutil.copy(recipe.path, os.path.join(autopkg_worktree_path, "overrides"))
-        autopkg_worktree_repo.git.add(os.path.join("overrides", recipe.path))
+        autopkg_worktree_repo.git.add(
+            os.path.join(autopkg_worktree_path, "overrides", recipe.path)
+        )
         autopkg_worktree_repo.git.commit(m=f"Update trust for {recipe.name}")
         autopkg_worktree_repo.git.push("--set-upstream", "origin", branch_name)
         payload = {
