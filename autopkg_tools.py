@@ -34,7 +34,7 @@ SLACK_WEBHOOK = os.environ.get("SLACK_WEBHOOK_TOKEN", None)
 AUTOPKG_REPO_DIR = os.getenv("GITHUB_WORKSPACE", "./")
 MUNKI_REPO_DIR = os.path.join(AUTOPKG_REPO_DIR, "munki_repo")
 RECIPE_TO_RUN = os.environ.get("RECIPE", None)
-GITHUB_REPOSITORY = os.getenv("GITHUB_REPOSITORY", "None")
+AUTOPKG_REPOSITORY = os.getenv("GITHUB_REPOSITORY", "None")
 MUNKI_REPOSITORY = os.getenv("MUNKI_REPOSITORY", "None")
 # setup gitpython repos
 MUNKI_REPO = git.Repo(MUNKI_REPO_DIR)
@@ -208,24 +208,13 @@ def handle_recipe(recipe, opts):
         autopkg_worktree_repo.git.add(os.join("overrides", recipe.path))
         autopkg_worktree_repo.git.commit(m=f"Update trust for {recipe.name}")
         autopkg_worktree_repo.git.push("--set-upstream", "origin", branch_name)
-        cmd = [
-            "gh",
-            "api",
-            "--method",
-            "POST",
-            f"/repos/{GITHUB_REPOSITORY}/pulls",
-            "-f",
-            f"title='feat: Update trust for { recipe.name }'",
-            "-f",
-            f"body='{ recipe.results['message'] }'",
-            "-f",
-            f"head='{ branch_name }'",
-            "-f",
-            "base='main'",
-        ]
-        output, err, exit_code = run_cmd(cmd)
-        if exit_code != 0:
-            print(err)
+        payload = {
+            "title": f"feat: Update trust for { recipe.name }",
+            "body": recipe.results["message"],
+            "head": branch_name,
+            "base": "main",
+        }
+        create_pull_request(AUTOPKG_REPOSITORY, payload)
         AUTOPKG_REPO.git.worktree("remove", branch_name, "-f")
     if recipe.verified in (True, None):
         recipe.run()
