@@ -154,6 +154,15 @@ def run_cmd(cmd):
     return output, err, exit_code
 
 
+def create_pull_request(repo, payload):
+    url = f"https://api.github.com/repos/{repo}/pulls"
+    auth_header = {"Authorization": f"token {os.environ['GH_TOKEN']}"}
+    headers = {"Accept": "application/vnd.github.v3+json"}
+    json_payload = json.dumps(payload)
+    response = requests.post(url, headers=headers, data=json_payload, auth=auth_header)
+    return response.json()
+
+
 def worktree_commit(recipe):
     MUNKI_REPO.git.worktree("add", recipe.branch, "-b", recipe.branch)
     worktree_repo_path = os.path.join(MUNKI_REPO_DIR, recipe.branch)
@@ -173,41 +182,14 @@ def worktree_commit(recipe):
     )
     worktree_repo.git.push("--set-upstream", "origin", recipe.branch)
     MUNKI_REPO.git.worktree("remove", recipe.branch, "-f")
-    url = f"https://api.github.com/repos/{MUNKI_REPOSITORY}/pulls"
-    auth_header = {"Authorization": f"token {os.environ['GH_TOKEN']}"}
-    headers = {"Accept": "application/vnd.github.v3+json"}
-    payload = {
+    pr_payload = {
         "title": f"feat: { recipe.name } update",
         "body": f"Updated { recipe.name } to { recipe.updated_version }",
         "head": recipe.branch,
         "base": "main",
     }
-    json_payload = json.dumps(payload)
-    response = requests.post(url, headers=headers, data=json_payload, auth=auth_header)
-    print(response.json())
-    # cmd = [
-    #     "gh",
-    #     "api",
-    #     "--method",
-    #     "POST",
-    #     "-h",
-    #     "Accept: application/vnd.github.v3+json",
-    #     "-h",
-    #     "Content-Type: application/json",
-    #     f"/repos/{MUNKI_REPOSITORY}/pulls",
-    #     "-f",
-    #     f"title='feat: { recipe.name } update'",
-    #     "-f",
-    #     f"body='Updated { recipe.name } to { recipe.updated_version }'",
-    #     "-f",
-    #     f"head='{ recipe.branch }'",
-    #     "-f",
-    #     "base='main'",
-    # ]
-    # output, err, exit_code = run_cmd(cmd)
-    # print(output)
-    # if exit_code != 0:
-    #     print(err)
+    create_pull_request(MUNKI_REPOSITORY, pr_payload)
+    return
 
 
 def handle_recipe(recipe, opts):
