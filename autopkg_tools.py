@@ -156,10 +156,12 @@ def run_cmd(cmd):
 
 def create_pull_request(repo, payload):
     url = f"https://api.github.com/repos/{repo}/pulls"
-    auth_header = {"Authorization": f"token {os.environ['GH_TOKEN']}"}
-    headers = {"Accept": "application/vnd.github.v3+json"}
+    headers = {
+        "Authorization": f"token {os.environ['GH_TOKEN']}",
+        "Accept": "application/vnd.github.v3+json",
+    }
     json_payload = json.dumps(payload)
-    response = requests.post(url, headers=headers, data=json_payload, auth=auth_header)
+    response = requests.post(url, headers=headers, data=json_payload)
     return response.json()
 
 
