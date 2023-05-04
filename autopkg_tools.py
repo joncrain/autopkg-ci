@@ -165,6 +165,8 @@ def create_pull_request(repo, payload):
     return response.json()
 
 
+# Would need repo, repo dir, branch name, file to commit, commit message, and pr title
+# The munki repo could have multiple files?
 def worktree_commit(recipe):
     MUNKI_REPO.git.worktree("add", recipe.branch, "-b", recipe.branch)
     worktree_repo_path = os.path.join(MUNKI_REPO_DIR, recipe.branch)
@@ -205,10 +207,11 @@ def handle_recipe(recipe, opts):
         AUTOPKG_REPO.git.worktree("add", branch_name, "-b", branch_name)
         autopkg_worktree_path = os.path.join(AUTOPKG_REPO_DIR, branch_name)
         autopkg_worktree_repo = git.Repo(autopkg_worktree_path)
-        shutil.copy(recipe.path, os.path.join(autopkg_worktree_path, "overrides"))
-        autopkg_worktree_repo.git.add(
-            os.path.join(autopkg_worktree_path, "overrides", recipe.path)
-        )
+        logging.debug(f"Creating {autopkg_worktree_path}")
+        overrides_path = os.path.join(autopkg_worktree_path, "overrides")
+        logging.debug(f"Creating {overrides_path}")
+        shutil.copy(recipe.path, overrides_path)
+        autopkg_worktree_repo.git.add(overrides_path)
         autopkg_worktree_repo.git.commit(m=f"Update trust for {recipe.name}")
         autopkg_worktree_repo.git.push("--set-upstream", "origin", branch_name)
         payload = {
